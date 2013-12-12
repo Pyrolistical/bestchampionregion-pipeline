@@ -1,4 +1,9 @@
-@Grab(group="org.thymeleaf", module="thymeleaf", version="2.1.2.RELEASE")
+@Grapes([
+	@Grab(group="org.thymeleaf", module="thymeleaf", version="2.1.2.RELEASE"),
+	@Grab(group="org.mongodb", module="mongo-java-driver", version="2.9.3")
+])
+
+import com.mongodb.*
 
 import org.thymeleaf.*
 import org.thymeleaf.context.*
@@ -33,7 +38,30 @@ model["champions"] = Constants.champions
 model["regions"] = Constants.regions
 model["seasons"] = Constants.seasons
 
-new File("output.html").withWriter {
-	writer ->
-		templateEngine.process("index", context, writer)
+
+def mongo = new Mongo()
+try {
+	def db = mongo.getDB("sandbox")
+	def lolapi = db.getCollection("lolapi")
+
+	def collection = db.getCollection("annie")
+
+	def data = []
+
+	collection.find().sort([rating: -1] as BasicDBObject).limit(20).eachWithIndex {
+		row, i ->
+			def datum = new HashMap(row)
+			datum.remove("_id")
+			datum["rank"] = i + 1
+			data.add(datum)
+	}
+
+	model["data"] = data
+
+	new File("output.html").withWriter {
+		templateEngine.process("index", context, it)
+	}
+} finally {
+	mongo.close()
 }
+

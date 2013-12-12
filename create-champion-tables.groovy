@@ -2,6 +2,7 @@
 import com.mongodb.*
 
 def mongo = new Mongo()
+try {
 def db = mongo.getDB("sandbox")
 def lolapi = db.getCollection("lolapi")
 
@@ -39,3 +40,7 @@ lolapi.find(["data.champions.name": "Annie"] as BasicDBObject).each {
 }
 
 annie.find().each {println(it)}
+} finally {
+	mongo.close()
+}
+
