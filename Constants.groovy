@@ -26,7 +26,7 @@ def static champions = asText(
 	["Elise"],
 	["Evelynn"],
 	["Ezreal"],
-	["FiddleSticks"],
+	["FiddleSticks", "Fiddlesticks"],
 	["Fiora"],
 	["Fizz"],
 	["Galio"],
