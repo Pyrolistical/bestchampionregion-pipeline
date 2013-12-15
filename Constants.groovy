@@ -146,7 +146,10 @@ def static asText(Object... values) {
 		value ->
 			def key = value[0]
 			def name = value.size() == 2 ? value[1] : key.capitalize()
-			result[key] = name
+			result[key] = [
+				name: name,
+				path: name.toLowerCase().replace("'", "-").replace(" ", "-")
+			]
 	}
 	result
 }
