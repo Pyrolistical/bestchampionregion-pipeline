@@ -80,7 +80,7 @@ try {
 	def data = []
 
 	def ratingOrder = ordering.key == "best" ? -1 : 1
-	collection.find().sort([rating: ratingOrder] as BasicDBObject).limit(20).eachWithIndex {
+	collection.find().sort([rating: ratingOrder] as BasicDBObject).limit(100).eachWithIndex {
 		row, i ->
 			def datum = new HashMap(row)
 			datum["rank"] = i + 1
