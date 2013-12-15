@@ -41,10 +41,9 @@ model["seasons"] = Constants.seasons
 
 def mongo = new Mongo()
 try {
-	def db = mongo.getDB("sandbox")
-	def lolapi = db.getCollection("lolapi")
+	def db = mongo.getDB("live")
 
-	def collection = db.getCollection("annie")
+	def collection = db.getCollection("table_annie")
 
 	def data = []
 
@@ -58,7 +57,7 @@ try {
 
 	model["data"] = data
 
-	new File("output.html").withWriter {
+	new File("/Users/rchen/dev/projects/github.com/concept-not-found/bestchampionregion/template/ordering/champion/region/season/output.html").withWriter {
 		templateEngine.process("index", context, it)
 	}
 } finally {

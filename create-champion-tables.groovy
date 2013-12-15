@@ -3,10 +3,10 @@ import com.mongodb.*
 
 def mongo = new Mongo()
 try {
-def db = mongo.getDB("sandbox")
+def db = mongo.getDB("live")
 def lolapi = db.getCollection("lolapi")
 
-def annie = db.getCollection("annie")
+def table = db.getCollection("table_annie")
 
 lolapi.find(["data.champions.name": "Annie"] as BasicDBObject).each {
 	rankedStats ->
@@ -31,7 +31,7 @@ lolapi.find(["data.champions.name": "Annie"] as BasicDBObject).each {
 			lost: lost,
 			rating: rating
 		]
-		annie.update(
+		table.update(
 			[_id: summonerId] as BasicDBObject,
 			row as BasicDBObject,
 			true,
@@ -39,7 +39,6 @@ lolapi.find(["data.champions.name": "Annie"] as BasicDBObject).each {
 		)
 }
 
-annie.find().each {println(it)}
 } finally {
 	mongo.close()
 }
