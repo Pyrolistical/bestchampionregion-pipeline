@@ -43,7 +43,7 @@ def mongo = new Mongo()
 try {
 	def db = mongo.getDB("live")
 
-	def collection = db.getCollection("table_annie")
+	def collection = db.getCollection("summoner_ratings_Annie")
 
 	def data = []
 
