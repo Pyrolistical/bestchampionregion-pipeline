@@ -50,17 +50,27 @@ try {
 	collection.find().sort([rating: -1] as BasicDBObject).limit(20).eachWithIndex {
 		row, i ->
 			def datum = new HashMap(row)
-			datum.remove("_id")
 			datum["rank"] = i + 1
 			data.add(datum)
 	}
 
-	model["data"] = data
+	def lolapi = db.getCollection("lolapi")
+	data.each {
+		it.name = convertSummonerIdToName(lolapi, it.summonerId)
+	}
+
+	model["data"] = data.collect {
+		it.subMap(["rank", "name", "won", "lost", "rating"])
+	}
 
 	new File("/Users/rchen/dev/projects/github.com/concept-not-found/bestchampionregion/template/ordering/champion/region/season/output.html").withWriter {
 		templateEngine.process("index", context, it)
 	}
 } finally {
 	mongo.close()
+}
+
+def convertSummonerIdToName(lolapi, summonerId) {
+	lolapi.findOne([path: "api/lol/{region}/v1.1/summoner/by-name/{name}", "data.id": summonerId] as BasicDBObject).data.name
 }
 
