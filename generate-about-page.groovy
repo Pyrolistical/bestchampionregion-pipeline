@@ -1,6 +1,7 @@
 @Grapes([
 	@Grab(group="org.thymeleaf", module="thymeleaf", version="2.1.2.RELEASE"),
-	@Grab(group="org.mongodb", module="mongo-java-driver", version="2.9.3")
+	@Grab(group="org.mongodb", module="mongo-java-driver", version="2.9.3"),
+	@Grab(group="org.slf4j", module="slf4j-simple", version="1.7.5")
 ])
 
 import com.mongodb.*
