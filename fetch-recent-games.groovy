@@ -7,16 +7,6 @@ import com.mongodb.*
 import com.github.concept.not.found.regulache.Regulache
 import groovyx.net.http.HttpResponseException
 
-def getApiKey() {
-	def lol_api_key = System.getProperty("lol_api_key") ?: System.getenv("lol_api_key")
-
-	if (!lol_api_key) {
-		throw new IllegalArgumentException("missing lol_api_key property")
-	}
-
-	lol_api_key
-}
-
 def mongo = new Mongo()
 
 try {
@@ -24,11 +14,15 @@ try {
 	def lolapi = db.getCollection("lolapi")
 
 	def regulache = new Regulache("https://prod.api.pvp.net/", lolapi)
-	lolapi.find([path : "api/lol/{region}/v1.1/summoner/by-name/{name}"] as BasicDBObject).each {
-		def summonerId = it.data.id
-		fetch(regulache, summonerId)
-		println("done $summonerId")
-		sleep(1000)
+	lolapi.find([path: "api/lol/{region}/v1.1/stats/by-summoner/{summonerId}/ranked"] as BasicDBObject, ["data.summonerId": 1]  as BasicDBObject).each {
+		def summonerId = it.data.summonerId
+		def cached = fetch(regulache, summonerId)
+		if (!cached) {
+			println("done $summonerId")
+			sleep(1200)
+		} else {
+			println("already have $summonerId, skipped")
+		}
 	}
 } finally {
 	mongo.close()
@@ -36,18 +30,22 @@ try {
 
 def fetch(regulache, summonerId) {
 	try {
-		regulache.executeGet(
+		def (json, cached) = regulache.executeGet(
 				path: "/api/lol/{region}/v1.1/game/by-summoner/{summonerId}/recent",
 				"path-parameters": [
 						region: "na",
 						summonerId: summonerId as String
 				],
 				"transient-queries": [
-						api_key: getApiKey()
+						api_key: Api.key()
 				]
 		)
+		if (json == null) {
+			println("could not get recent games for $summonerId")
+		}
+		cached
 	} catch (HttpResponseException e) {
-		println("failed to fetch stats for $summonerId")
+		println("failed to fetch recent games for $summonerId")
 		e.printStackTrace()
 	}
 }

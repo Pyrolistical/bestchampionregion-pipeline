@@ -7,16 +7,6 @@ import com.mongodb.*
 import com.github.concept.not.found.regulache.Regulache
 import groovyx.net.http.HttpResponseException
 
-def getApiKey() {
-	def lol_api_key = System.getProperty("lol_api_key") ?: System.getenv("lol_api_key")
-
-	if (!lol_api_key) {
-		throw new IllegalArgumentException("missing lol_api_key property")
-	}
-
-	lol_api_key
-}
-
 def mongo = new Mongo()
 
 try {
@@ -57,9 +47,12 @@ def fetchRankedStats(regulache, summonerId) {
 						season: "SEASON3"
 				],
 				"transient-queries": [
-						api_key: getApiKey()
+						api_key: Api.key()
 				]
 		)
+		if (json == null) {
+			println("$summonerId doesn't play ranked")
+		}
 		cached
 	} catch (HttpResponseException e) {
 		println("failed to fetch stats for $summonerId")
