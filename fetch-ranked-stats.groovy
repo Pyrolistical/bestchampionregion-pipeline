@@ -42,6 +42,9 @@ def fetchRankedStats(regulache, summonerId) {
 						region: "na",
 						summonerId: summonerId as String
 				],
+				queries: [
+						season: "SEASON3"
+				],
 				"transient-queries": [
 						api_key: getApiKey()
 				]

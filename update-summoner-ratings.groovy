@@ -16,7 +16,10 @@ try {
 
 	def table = db.getCollection("summoner_ratings_$championName")
 
-	lolapi.find(["data.champions.name": championName] as BasicDBObject).each {
+	lolapi.find([
+			path: "api/lol/{region}/v1.1/stats/by-summoner/{summonerId}/ranked",
+			"data.champions.name": championName
+	] as BasicDBObject).each {
 		rankedStats ->
 			def summonerId = rankedStats.data.getInt("summonerId")
 			def champion = rankedStats.data.champions.find {

@@ -1,6 +1,8 @@
 @Grapes([
-	@Grab(group="org.thymeleaf", module="thymeleaf", version="2.1.2.RELEASE"),
-	@Grab(group="org.mongodb", module="mongo-java-driver", version="2.9.3")
+	@Grab(group = "org.thymeleaf", module = "thymeleaf", version = "2.1.2.RELEASE"),
+	@Grab(group = "org.mongodb", module = "mongo-java-driver", version = "2.9.3"),
+	@Grab(group = "com.github.concept-not-found", module = "regulache", version = "1-SNAPSHOT"),
+	@Grab(group = "org.codehaus.groovy.modules.http-builder", module = "http-builder", version = "0.6")
 ])
 
 import com.mongodb.*
@@ -8,6 +10,9 @@ import com.mongodb.*
 import org.thymeleaf.*
 import org.thymeleaf.context.*
 import org.thymeleaf.templateresolver.*
+
+import com.github.concept.not.found.regulache.Regulache
+import groovyx.net.http.HttpResponseException
 
 def ordering = args[0]
 if (!ordering) {
@@ -88,8 +93,13 @@ try {
 	}
 
 	def lolapi = db.getCollection("lolapi")
+	def summonerIds = data.collect {
+		it.summonerId
+	}
+	def nameBySummonerId = convertSummonerIdToName(lolapi, summonerIds)
+
 	data.each {
-		it.name = convertSummonerIdToName(lolapi, it.summonerId)
+		it.name = nameBySummonerId[it.summonerId]
 	}
 
 	model["data"] = data.collect {
@@ -109,7 +119,66 @@ try {
 	mongo.close()
 }
 
-def convertSummonerIdToName(lolapi, summonerId) {
-	lolapi.findOne([path: "api/lol/{region}/v1.1/summoner/by-name/{name}", "data.id": summonerId] as BasicDBObject).data.name
+def getApiKey() {
+	def lol_api_key = System.getProperty("lol_api_key") ?: System.getenv("lol_api_key")
+
+	if (!lol_api_key) {
+		throw new IllegalArgumentException("missing lol_api_key property")
+	}
+
+	lol_api_key
+}
+
+def convertSummonerIdToName(lolapi, summonerIds) {
+	def result = [:]
+	def remaining = []
+	summonerIds.each {
+		summonerId ->
+			def existing = lolapi.findOne([path: "api/lol/{region}/v1.1/summoner/by-name/{name}", "data.id": summonerId] as BasicDBObject)
+			if (existing) {
+				result[summonerId] = existing.data.name
+			} else {
+				existing = lolapi.findOne([path: "api/lol/{region}/v1.1/summoner/{summonerIds}/name", "data.summoners.id": summonerId] as BasicDBObject)
+				if (existing) {
+					def name = existing.data.summoners.find {
+						it.id == summonerId
+					}.name
+					result[summonerId] = name
+				} else {
+					remaining.add(summonerId)
+				}
+			}
+	}
+	if (!remaining.empty) {
+		def regulache = new Regulache("https://prod.api.pvp.net/", lolapi)
+		remaining.collate(40).each {
+			remaining40 ->
+				try {
+					def (json, cached) = regulache.executeGet(
+							path: "/api/lol/{region}/v1.1/summoner/{summonerIds}/name",
+							"path-parameters": [
+									region: "na",
+									summonerIds: remaining40.join(",")
+							],
+							"transient-queries": [
+									api_key: getApiKey()
+							]
+					)
+					remaining40.each {
+						summonerId ->
+							def name = json.summoners.find {
+								it.id == summonerId
+							}.name
+							result[summonerId] = name
+					}
+					println("Resolved an additional ${remaining40.size()} summoner ids")
+				} catch (HttpResponseException e) {
+					println("failed to resolve names for $remaining40")
+					e.printStackTrace()
+				}
+				sleep(1200)
+		}
+	}
+	result
 }
 

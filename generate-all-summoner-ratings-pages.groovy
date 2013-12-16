@@ -2,5 +2,6 @@ def templateDirectory = "/Users/rchen/dev/projects/github.com/concept-not-found/
 def outputDirectory = "/Users/rchen/dev/projects/github.com/concept-not-found/bestchampionregion-pages"
 Constants.champions.each {
 	champion ->
-		run(new File("generate-summoner-ratings-page.groovy"), ["best", champion.key, templateDirectory, outputDirectory] as String[])
+		run(new File("generate_summoner_ratings_page.groovy"), ["best", champion.key, templateDirectory, outputDirectory] as String[])
+		println("Done $champion.value.name")
 }
