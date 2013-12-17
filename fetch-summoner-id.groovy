@@ -1,28 +1,25 @@
 @Grapes([
 	@Grab(group="org.mongodb", module="mongo-java-driver", version="2.9.3"),
 	@Grab(group="com.github.concept-not-found", module="regulache", version="1-SNAPSHOT"),
-	@Grab(group="org.codehaus.groovy.modules.http-builder", module="http-builder", version="0.6")
+	@Grab(group="org.codehaus.groovy.modules.http-builder", module="http-builder", version="0.6"),
+	@GrabConfig(systemClassLoader = true)
 ])
 import com.mongodb.*
 import com.github.concept.not.found.regulache.Regulache
 import groovyx.net.http.HttpResponseException
 
-def mongo = new Mongo()
+MongoUtils.connect {
+	mongo ->
+		def lolapi = mongo.live.lolapi
 
-try {
-	def db = mongo.getDB("live")
-	def lolapi = db.getCollection("lolapi")
-
-	def regulache = new Regulache("https://prod.api.pvp.net/", lolapi)
-	def filename = args[0]
-	new File(filename).eachLine {
-		def name = it.replace(" ", "")
-		def id = findByName(regulache, name)
-		println("$name ==> $id")
-		sleep(1000)
-	}
-} finally {
-	mongo.close()
+		def regulache = new Regulache("https://prod.api.pvp.net/", lolapi)
+		def filename = args[0]
+		new File(filename).eachLine {
+			def name = it.replace(" ", "")
+			def id = findByName(regulache, name)
+			println("$name ==> $id")
+			sleep(1000)
+		}
 }
 
 def findByName(regulache, name) {

@@ -1,8 +1,10 @@
 @Grapes([
 	@Grab(group = "org.thymeleaf", module = "thymeleaf", version = "2.1.2.RELEASE"),
+	@Grab(group = "org.slf4j", module = "slf4j-simple", version = "1.7.5"),
 	@Grab(group = "org.mongodb", module = "mongo-java-driver", version = "2.9.3"),
 	@Grab(group = "com.github.concept-not-found", module = "regulache", version = "1-SNAPSHOT"),
-	@Grab(group = "org.codehaus.groovy.modules.http-builder", module = "http-builder", version = "0.6")
+	@Grab(group = "org.codehaus.groovy.modules.http-builder", module = "http-builder", version = "0.6"),
+	@GrabConfig(systemClassLoader = true)
 ])
 
 import com.mongodb.*
@@ -45,55 +47,51 @@ templateEngine.setTemplateResolver(fileTemplateResolver)
 def context = new Context()
 def model = context.variables
 
-def mongo = new Mongo()
-try {
-	def db = mongo.getDB("live")
+MongoUtils.connect {
+	mongo ->
+		model["data"] = []
+		Constants.champions.each {
+			champion ->
+				def collection = mongo.live."summoner_ratings_${champion.key}"
 
-	model["data"] = []
-	Constants.champions.each {
-		champion ->
-			def collection = db.getCollection("summoner_ratings_${champion.key}")
+				def data = [
+					ordering: ordering,
+					champion: champion,
+					region: region,
+					season: season
+				]
+				def table = []
 
-			def data = [
-				ordering: ordering,
-				champion: champion,
-				region: region,
-				season: season
-			]
-			def table = []
+				def ratingOrder = ordering.key == "best" ? -1 : 1
+				collection.find().sort([rating: ratingOrder] as BasicDBObject).limit(5).eachWithIndex {
+					row, i ->
+						def datum = new HashMap(row)
+						datum["rank"] = i + 1
+						table.add(datum)
+				}
 
-			def ratingOrder = ordering.key == "best" ? -1 : 1
-			collection.find().sort([rating: ratingOrder] as BasicDBObject).limit(5).eachWithIndex {
-				row, i ->
-					def datum = new HashMap(row)
-					datum["rank"] = i + 1
-					table.add(datum)
-			}
+				def lolapi = mongo.live.lolapi
+				def summonerIds = table.collect {
+					it.summonerId
+				}
+				def nameBySummonerId = convertSummonerIdToName(lolapi, summonerIds)
 
-			def lolapi = db.getCollection("lolapi")
-			def summonerIds = table.collect {
-				it.summonerId
-			}
-			def nameBySummonerId = convertSummonerIdToName(lolapi, summonerIds)
+				table.each {
+					it.name = nameBySummonerId[it.summonerId]
+				}
 
-			table.each {
-				it.name = nameBySummonerId[it.summonerId]
-			}
+				data.table = table.collect {
+					it.subMap(["rank", "name", "won", "lost", "rating"])
+				}
 
-			data.table = table.collect {
-				it.subMap(["rank", "name", "won", "lost", "rating"])
-			}
-
-			model["data"].add(data)
-			println("done $champion.value.name")
-	}
-	def outputPath = new File(outputDirectory, "top")
-	outputPath.mkdirs()
-	new File(outputPath, "index.html").withWriter {
-		templateEngine.process("index", context, it)
-	}
-} finally {
-	mongo.close()
+				model["data"].add(data)
+				println("done $champion.value.name")
+		}
+		def outputPath = new File(outputDirectory, "top")
+		outputPath.mkdirs()
+		new File(outputPath, "index.html").withWriter {
+			templateEngine.process("index", context, it)
+		}
 }
 
 def convertSummonerIdToName(lolapi, summonerIds) {

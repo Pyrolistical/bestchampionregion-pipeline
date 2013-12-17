@@ -1,11 +1,11 @@
 @Grapes([
-	@Grab(group="org.thymeleaf", module="thymeleaf", version="2.1.2.RELEASE"),
-	@Grab(group="org.mongodb", module="mongo-java-driver", version="2.9.3"),
-	@Grab(group="org.slf4j", module="slf4j-simple", version="1.7.5")
+	@Grab(group = "org.thymeleaf", module = "thymeleaf", version = "2.1.2.RELEASE"),
+	@Grab(group = "org.slf4j", module = "slf4j-simple", version = "1.7.5"),
+	@Grab(group = "org.mongodb", module = "mongo-java-driver", version = "2.9.3"),
+	@GrabConfig(systemClassLoader = true)
 ])
 
 import com.mongodb.*
-
 import org.thymeleaf.*
 import org.thymeleaf.context.*
 import org.thymeleaf.templateresolver.*
@@ -29,20 +29,16 @@ templateEngine.setTemplateResolver(fileTemplateResolver)
 def context = new Context()
 def model = context.variables
 
-def mongo = new Mongo()
-try {
-	def db = mongo.getDB("live")
+MongoUtils.connect {
+	mongo ->
+		def lolapi = mongo.live.lolapi
 
-	def lolapi = db.getCollection("lolapi")
+		def numberOfSummoners = lolapi.count([path: "api/lol/{region}/v1.1/stats/by-summoner/{summonerId}/ranked"] as BasicDBObject)
+		model["numberOfSummoners"] = numberOfSummoners
 
-	def numberOfSummoners = lolapi.count([path: "api/lol/{region}/v1.1/stats/by-summoner/{summonerId}/ranked"] as BasicDBObject)
-	model["numberOfSummoners"] = numberOfSummoners
-
-	def outputPath = new File(outputDirectory, "about")
-	outputPath.mkdirs()
-	new File(outputPath, "index.html").withWriter {
-		templateEngine.process("index", context, it)
-	}
-} finally {
-	mongo.close()
+		def outputPath = new File(outputDirectory, "about")
+		outputPath.mkdirs()
+		new File(outputPath, "index.html").withWriter {
+			templateEngine.process("index", context, it)
+		}
 }

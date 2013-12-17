@@ -1,8 +1,10 @@
 @Grapes([
 	@Grab(group = "org.thymeleaf", module = "thymeleaf", version = "2.1.2.RELEASE"),
+	@Grab(group = "org.slf4j", module = "slf4j-simple", version = "1.7.5"),
 	@Grab(group = "org.mongodb", module = "mongo-java-driver", version = "2.9.3"),
 	@Grab(group = "com.github.concept-not-found", module = "regulache", version = "1-SNAPSHOT"),
-	@Grab(group = "org.codehaus.groovy.modules.http-builder", module = "http-builder", version = "0.6")
+	@Grab(group = "org.codehaus.groovy.modules.http-builder", module = "http-builder", version = "0.6"),
+	@GrabConfig(systemClassLoader = true)
 ])
 
 import com.mongodb.*
@@ -76,47 +78,43 @@ model["regions"] = Constants.regions
 model["seasons"] = Constants.seasons
 
 
-def mongo = new Mongo()
-try {
-	def db = mongo.getDB("live")
+MongoUtils.connect {
+	mongo ->
+		def collection = mongo.live."summoner_ratings_${champion.key}"
 
-	def collection = db.getCollection("summoner_ratings_${champion.key}")
+		def data = []
 
-	def data = []
+		def ratingOrder = ordering.key == "best" ? -1 : 1
+		collection.find().sort([rating: ratingOrder] as BasicDBObject).limit(100).eachWithIndex {
+			row, i ->
+				def datum = new HashMap(row)
+				datum["rank"] = i + 1
+				data.add(datum)
+		}
 
-	def ratingOrder = ordering.key == "best" ? -1 : 1
-	collection.find().sort([rating: ratingOrder] as BasicDBObject).limit(100).eachWithIndex {
-		row, i ->
-			def datum = new HashMap(row)
-			datum["rank"] = i + 1
-			data.add(datum)
-	}
+		def lolapi = mongo.live.lolapi
+		def summonerIds = data.collect {
+			it.summonerId
+		}
+		def nameBySummonerId = convertSummonerIdToName(lolapi, summonerIds)
 
-	def lolapi = db.getCollection("lolapi")
-	def summonerIds = data.collect {
-		it.summonerId
-	}
-	def nameBySummonerId = convertSummonerIdToName(lolapi, summonerIds)
+		data.each {
+			it.name = nameBySummonerId[it.summonerId]
+		}
 
-	data.each {
-		it.name = nameBySummonerId[it.summonerId]
-	}
+		model["data"] = data.collect {
+			it.subMap(["rank", "name", "won", "lost", "rating"])
+		}
 
-	model["data"] = data.collect {
-		it.subMap(["rank", "name", "won", "lost", "rating"])
-	}
-
-	def orderingPath = ordering.value.path
-	def championPath = champion.value.path
-	def regionPath = region.value.path
-	def seasonPath = season.value.path
-	def outputPath = new File(outputDirectory, "$orderingPath/$championPath/$regionPath/$seasonPath")
-	outputPath.mkdirs()
-	new File(outputPath, "index.html").withWriter {
-		templateEngine.process("index", context, it)
-	}
-} finally {
-	mongo.close()
+		def orderingPath = ordering.value.path
+		def championPath = champion.value.path
+		def regionPath = region.value.path
+		def seasonPath = season.value.path
+		def outputPath = new File(outputDirectory, "$orderingPath/$championPath/$regionPath/$seasonPath")
+		outputPath.mkdirs()
+		new File(outputPath, "index.html").withWriter {
+			templateEngine.process("index", context, it)
+		}
 }
 
 def convertSummonerIdToName(lolapi, summonerIds) {
