@@ -1,8 +1,10 @@
 @Grapes([
-	@Grab(group = "org.mongodb", module = "mongo-java-driver", version = "2.9.3"),
-	@GrabConfig(systemClassLoader = true)
+	@Grab(group="com.github.concept-not-found", module="mongo-groovy-extension", version="1-SNAPSHOT"),
+	@Grab(group = "org.mongodb", module = "mongo-java-driver", version = "2.11.3")
 ])
 import com.mongodb.*
+
+import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 
 def championName = args[0]
 if (!championName) {

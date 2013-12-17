@@ -1,10 +1,10 @@
 @Grapes([
 	@Grab(group = "org.thymeleaf", module = "thymeleaf", version = "2.1.2.RELEASE"),
 	@Grab(group = "org.slf4j", module = "slf4j-simple", version = "1.7.5"),
-	@Grab(group = "org.mongodb", module = "mongo-java-driver", version = "2.9.3"),
+	@Grab(group = "org.mongodb", module = "mongo-java-driver", version = "2.11.3"),
 	@Grab(group = "com.github.concept-not-found", module = "regulache", version = "1-SNAPSHOT"),
-	@Grab(group = "org.codehaus.groovy.modules.http-builder", module = "http-builder", version = "0.6"),
-	@GrabConfig(systemClassLoader = true)
+	@Grab(group="com.github.concept-not-found", module="mongo-groovy-extension", version="1-SNAPSHOT"),
+	@Grab(group = "org.codehaus.groovy.modules.http-builder", module = "http-builder", version = "0.6")
 ])
 
 import com.mongodb.*
@@ -14,6 +14,7 @@ import org.thymeleaf.context.*
 import org.thymeleaf.templateresolver.*
 
 import com.github.concept.not.found.regulache.Regulache
+import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 import groovyx.net.http.HttpResponseException
 
 def ordering = args[0]

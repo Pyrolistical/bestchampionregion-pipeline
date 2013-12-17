@@ -1,11 +1,12 @@
 @Grapes([
-	@Grab(group="org.mongodb", module="mongo-java-driver", version="2.9.3"),
+	@Grab(group="org.mongodb", module="mongo-java-driver", version="2.11.3"),
 	@Grab(group="com.github.concept-not-found", module="regulache", version="1-SNAPSHOT"),
-	@Grab(group="org.codehaus.groovy.modules.http-builder", module="http-builder", version="0.6"),
-	@GrabConfig(systemClassLoader = true)
+	@Grab(group="com.github.concept-not-found", module="mongo-groovy-extension", version="1-SNAPSHOT"),
+	@Grab(group="org.codehaus.groovy.modules.http-builder", module="http-builder", version="0.6")
 ])
 import com.mongodb.*
 import com.github.concept.not.found.regulache.Regulache
+import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 import groovyx.net.http.HttpResponseException
 
 MongoUtils.connect {
@@ -13,7 +14,10 @@ MongoUtils.connect {
 		def lolapi = mongo.live.lolapi
 
 		def n = 0
-		def summonerIds = lolapi.find([path : "api/lol/{region}/v1.1/game/by-summoner/{summonerId}/recent"] as BasicDBObject).collect {
+		def summonerIds = lolapi.find(
+				[path : "api/lol/{region}/v1.1/game/by-summoner/{summonerId}/recent"] as BasicDBObject,
+				["data.summonerId": 1, "data.games.fellowPlayers.summonerId": 1] as BasicDBObject
+		).collect {
 			def ids = [it.data.summonerId]
 			it.data.games.each {
 				game ->
