@@ -1,8 +1,8 @@
 @Grapes([
-	@Grab(group = "org.thymeleaf", module = "thymeleaf", version = "2.1.2.RELEASE"),
-	@Grab(group = "org.slf4j", module = "slf4j-simple", version = "1.7.5"),
-	@Grab(group="com.github.concept-not-found", module="mongo-groovy-extension", version="1-SNAPSHOT"),
-	@Grab(group = "org.mongodb", module = "mongo-java-driver", version = "2.11.3")
+	@Grab("org.thymeleaf:thymeleaf:2.1.2.RELEASE"),
+	@Grab("org.slf4j:slf4j-simple:1.7.5"),
+	@Grab("com.github.concept-not-found:mongo-groovy-extension:1-SNAPSHOT"),
+	@Grab("org.mongodb:mongo-java-driver:2.11.3")
 ])
 
 import com.mongodb.*

@@ -1,4 +1,4 @@
-@Grab(group = "commons-io", module = "commons-io", version = "2.4")
+@Grab("commons-io:commons-io:2.4")
 
 import org.apache.commons.io.*
 

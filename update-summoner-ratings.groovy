@@ -1,6 +1,6 @@
 @Grapes([
-	@Grab(group="com.github.concept-not-found", module="mongo-groovy-extension", version="1-SNAPSHOT"),
-	@Grab(group = "org.mongodb", module = "mongo-java-driver", version = "2.11.3")
+	@Grab("com.github.concept-not-found:mongo-groovy-extension:1-SNAPSHOT"),
+	@Grab("org.mongodb:mongo-java-driver:2.11.3")
 ])
 import com.mongodb.*
 

@@ -1,8 +1,8 @@
 @Grapes([
-	@Grab(group="org.mongodb", module="mongo-java-driver", version="2.11.3"),
-	@Grab(group="com.github.concept-not-found", module="regulache", version="1-SNAPSHOT"),
-	@Grab(group="com.github.concept-not-found", module="mongo-groovy-extension", version="1-SNAPSHOT"),
-	@Grab(group="org.codehaus.groovy.modules.http-builder", module="http-builder", version="0.6")
+	@Grab("org.mongodb:mongo-java-driver:2.11.3"),
+	@Grab("com.github.concept-not-found:regulache:1-SNAPSHOT"),
+	@Grab("com.github.concept-not-found:mongo-groovy-extension:1-SNAPSHOT"),
+	@Grab("org.codehaus.groovy.modules.http-builder:http-builder:0.6")
 ])
 import com.mongodb.*
 import com.github.concept.not.found.regulache.Regulache
