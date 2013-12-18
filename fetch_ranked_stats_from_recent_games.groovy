@@ -16,8 +16,15 @@ MongoUtils.connect {
 		def n = 0
 		def summonerIds = lolapi.find(
 				[path : "api/lol/{region}/v1.1/game/by-summoner/{summonerId}/recent"] as BasicDBObject,
-				["data.summonerId": 1, "data.games.fellowPlayers.summonerId": 1] as BasicDBObject
+				["data.summonerId": 1, "data.games.fellowPlayers.summonerId": 1, "data.games.level": 1] as BasicDBObject
 		).collect {
+			def level = data.games.collect {
+				game ->
+					game.level
+			}.max()
+			if (level != 30) {
+				return []
+			}
 			def ids = [it.data.summonerId]
 			it.data.games.each {
 				game ->

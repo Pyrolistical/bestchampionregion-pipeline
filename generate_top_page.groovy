@@ -78,11 +78,12 @@ MongoUtils.connect {
 				def nameBySummonerId = convertSummonerIdToName(lolapi, summonerIds)
 
 				table.each {
+					it.league = getLeague(lolapi, it.summonerId)
 					it.name = nameBySummonerId[it.summonerId]
 				}
 
 				data.table = table.collect {
-					it.subMap(["rank", "name", "won", "lost", "rating"])
+					it.subMap(["rank", "league", "name", "rating"])
 				}
 
 				model["data"].add(data)
@@ -148,3 +149,41 @@ def convertSummonerIdToName(lolapi, summonerIds) {
 	result
 }
 
+def getLeague(lolapi, summonerId) {
+	def regulache = new Regulache("https://prod.api.pvp.net/", lolapi)
+	try {
+		def (json, cached) = regulache.executeGet(
+				path: "/api/{region}/v2.1/league/by-summoner/{summonerId}",
+				"path-parameters": [
+						region: "na",
+						summonerId: summonerId as String
+				],
+				"transient-queries": [
+						api_key: Api.key()
+				]
+		)
+
+		if (json == null) {
+			throw new Exception("could not find league for $summonerId")
+		}
+		def entry = json."$summonerId".entries.find {
+			it.playerOrTeamId == summonerId as String
+		}
+		def league = Constants.leagues.find {
+			if (it.key == "challenger") {
+				it.value.name.toLowerCase() == entry.tier.toLowerCase()
+			} else {
+				it.value.name.toLowerCase() == "${entry.tier} ${entry.rank}".toLowerCase()
+			}
+		}
+		if (!cached) {
+			println("$summonerId is ${league.value.name}")
+			sleep(1200)
+		}
+		return league
+	} catch (HttpResponseException e) {
+		println("failed to get league for $summonerId")
+		e.printStackTrace()
+	}
+	null
+}
