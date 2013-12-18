@@ -115,6 +115,7 @@ def class Constants {
 			["Warwick"],
 			["Xerath"],
 			["XinZhao", "Xin Zhao"],
+			["Yasuo"],
 			["Yorick"],
 			["Zac"],
 			["Zed"],

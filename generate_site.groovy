@@ -62,7 +62,9 @@ def about(templateDirectory, outputDirectory) {
 def champions(templateDirectory, outputDirectory) {
 	Constants.champions.each {
 		champion ->
-			run(new File("generate_summoner_ratings_page.groovy"), [
+			def classloader = new GroovyClassLoader()
+			def shell = new GroovyShell(classloader, getBinding())
+			shell.run(new File("generate_summoner_ratings_page.groovy"), [
 					"best",
 					champion.key,
 					templateDirectory,
