@@ -60,18 +60,33 @@ def about(templateDirectory, outputDirectory) {
 }
 
 def champions(templateDirectory, outputDirectory) {
-	Constants.champions.each {
+	champions(templateDirectory, outputDirectory, Constants.champions)
+}
+
+def champions(templateDirectory, outputDirectory, championList) {
+	if (championList.empty) {
+		return
+	}
+	def doOver = []
+	championList.each {
 		champion ->
 			def classloader = new GroovyClassLoader()
 			def shell = new GroovyShell(classloader, getBinding())
-			shell.run(new File("generate_summoner_ratings_page.groovy"), [
-					"best",
-					champion.key,
-					templateDirectory,
-					outputDirectory
-			] as String[])
-			println("Done $champion.value.name")
+			try {
+				println("start $champion.value.name")
+				shell.run(new File("generate_summoner_ratings_page.groovy"), [
+						"best",
+						champion.key,
+						templateDirectory,
+						outputDirectory
+				] as String[])
+				println("done $champion.value.name")
+			} catch (DoOverException e) {
+				println("doing over: ${e.message}")
+				doOver.add(champion)
+			}
 	}
+	champions(templateDirectory, outputDirectory, doOver)
 }
 
 def top(templateDirectory, outputDirectory) {

@@ -100,7 +100,7 @@ MongoUtils.connect {
 		def nameBySummonerId = convertSummonerIdToName(lolapi, summonerIds)
 
 		data.each {
-			it.league = getLeague(lolapi, it.summonerId)
+			it.league = getLeague(collection, lolapi, it.summonerId)
 			it.name = nameBySummonerId[it.summonerId]
 		}
 
@@ -172,7 +172,7 @@ def convertSummonerIdToName(lolapi, summonerIds) {
 	result
 }
 
-def getLeague(lolapi, summonerId) {
+def getLeague(collection, lolapi, summonerId) {
 	def regulache = new Regulache("https://prod.api.pvp.net/", lolapi)
 	try {
 		def (json, cached) = regulache.executeGet(
@@ -186,14 +186,28 @@ def getLeague(lolapi, summonerId) {
 				]
 		)
 
+		if (json == null || json."$summonerId" == null) {
+			collection.remove([_id: summonerId] as BasicDBObject)
+			lolapi.remove([
+					path: "api/lol/{region}/v1.1/stats/by-summoner/{summonerId}/ranked",
+					"data.summonerId": summonerId
+			] as BasicDBObject)
+			throw new DoOverException("could not find league for $summonerId")
+		}
+		def tier = json."$summonerId".tier
+		// default to V because can't fetch rank for some summoners due to ranked decay
+		def rank = "V"
 		def entry = json."$summonerId".entries.find {
 			it.playerOrTeamId == summonerId as String
 		}
+		if (entry != null) {
+			rank = entry.rank
+		}
 		def league = Constants.leagues.find {
 			if (it.key == "challenger") {
-				it.value.name.toLowerCase() == entry.tier.toLowerCase()
+				it.value.name.toLowerCase() == tier.toLowerCase()
 			} else {
-				it.value.name.toLowerCase() == "${entry.tier} ${entry.rank}".toLowerCase()
+				it.value.name.toLowerCase() == "$tier $rank".toLowerCase()
 			}
 		}
 		if (!cached) {
