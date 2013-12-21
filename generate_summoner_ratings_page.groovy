@@ -56,7 +56,7 @@ def region = Constants.regions.find {
 def season = Constants.seasons.find {
 	it.key == "season3"
 }
-
+def start = System.currentTimeMillis()
 def templateEngine = new TemplateEngine()
 def fileTemplateResolver = new FileTemplateResolver()
 fileTemplateResolver.setPrefix("$templateDirectory/ordering/champion/region/season/")
@@ -77,21 +77,27 @@ model["orderings"] = Constants.orderings
 model["champions"] = Constants.champions
 model["regions"] = Constants.regions
 model["seasons"] = Constants.seasons
-
+println("init ${(System.currentTimeMillis() - start)/1000d}")
 
 MongoUtils.connect {
 	mongo ->
-		def collection = mongo.live."summoner_ratings_${champion.key}"
+		println("connected ${(System.currentTimeMillis() - start)/1000d}")
+		def collection = mongo.live."summoner_ratings"
 
 		def data = []
 
 		def ratingOrder = ordering.key == "best" ? -1 : 1
-		collection.find().sort([rating: ratingOrder] as BasicDBObject).limit(100).eachWithIndex {
+		def resultSet = collection.find([
+				champion: champion.key
+		] as BasicDBObject).sort([rating: ratingOrder] as BasicDBObject).limit(100)
+		println("queried ${(System.currentTimeMillis() - start)/1000000d}")
+		resultSet.eachWithIndex {
 			row, i ->
 				def datum = new HashMap(row)
 				datum["rank"] = i + 1
 				data.add(datum)
 		}
+		println("pulled ${(System.currentTimeMillis() - start)/1000000d}")
 
 		def lolapi = mongo.live.lolapi
 		def summonerIds = data.collect {
@@ -99,10 +105,12 @@ MongoUtils.connect {
 		}
 		def nameBySummonerId = convertSummonerIdToName(lolapi, summonerIds)
 
+		println("named ${(System.currentTimeMillis() - start)/1000d}")
 		data.each {
 			it.league = getLeague(collection, lolapi, it.summonerId)
 			it.name = nameBySummonerId[it.summonerId]
 		}
+		println("leagued ${(System.currentTimeMillis() - start)/1000d}")
 
 		model["data"] = data.collect {
 			it.subMap(["rank", "league", "name", "won", "lost", "rating"])
@@ -117,6 +125,7 @@ MongoUtils.connect {
 		new File(outputPath, "index.html").withWriter {
 			templateEngine.process("index", context, it)
 		}
+		println("templated ${(System.currentTimeMillis() - start)/1000d}")
 }
 
 def convertSummonerIdToName(lolapi, summonerIds) {

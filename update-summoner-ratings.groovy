@@ -6,52 +6,56 @@ import com.mongodb.*
 
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 
-def championName = args[0]
-if (!championName) {
-	throw new IllegalArgumentException("required champion parameter")
-}
-
-if (!Constants.champions[championName]) {
-	throw new IllegalArgumentException("No such champion named $championName")
-}
 MongoUtils.connect {
 	mongo ->
 		def lolapi = mongo.live.lolapi
 
-		def table = mongo.live."summoner_ratings_$championName"
+		def table = mongo.live."summoner_ratings"
+		table.ensureIndex([
+				champion: 1,
+				summonerId: 1
+		] as BasicDBObject, [
+				unique: true
+		] as BasicDBObject)
 
+		def done = 0
 		lolapi.find([
 				path: "api/lol/{region}/v1.1/stats/by-summoner/{summonerId}/ranked",
-				"data.champions.name": championName
+				data: ['$ne': null]
 		] as BasicDBObject).each {
 			rankedStats ->
 				def summonerId = rankedStats.data.getInt("summonerId")
-				def champion = rankedStats.data.champions.find {
+				rankedStats.data.champions.each {
 					champion ->
-						champion.name == championName
+						if (champion.name == null) {
+							return
+						}
+						def won = champion.stats.find {
+							stat ->
+								stat.name == "TOTAL_SESSIONS_WON"
+						}.getInt("value")
+						def lost = champion.stats.find {
+							stat ->
+								stat.name == "TOTAL_SESSIONS_LOST"
+						}.getInt("value")
+						def rating = won - lost
+						def row = [
+								summonerId: summonerId,
+								champion: champion.name,
+								won: won,
+								lost: lost,
+								rating: rating
+						]
+						table.update(
+								[summonerId: summonerId, champion: champion.name] as BasicDBObject,
+								row as BasicDBObject,
+								true,
+								false
+						)
 				}
-				def won = champion.stats.find {
-					stat ->
-						stat.name == "TOTAL_SESSIONS_WON"
-				}.getInt("value")
-				def lost = champion.stats.find {
-					stat ->
-						stat.name == "TOTAL_SESSIONS_LOST"
-				}.getInt("value")
-				def rating = won - lost
-				def row = [
-						_id: summonerId,
-						summonerId: summonerId,
-						won: won,
-						lost: lost,
-						rating: rating
-				]
-				table.update(
-						[_id: summonerId] as BasicDBObject,
-						row as BasicDBObject,
-						true,
-						false
-				)
+				if (++done % 1000 == 0) {
+					println("done $done")
+				}
 		}
 }
 
