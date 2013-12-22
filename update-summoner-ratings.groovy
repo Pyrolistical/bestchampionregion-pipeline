@@ -11,11 +11,17 @@ MongoUtils.connect {
 		def lolapi = mongo.live.lolapi
 
 		def table = mongo.live."summoner_ratings"
+
 		table.ensureIndex([
 				champion: 1,
 				summonerId: 1
 		] as BasicDBObject, [
 				unique: true
+		] as BasicDBObject)
+
+		table.ensureIndex([
+				champion: 1,
+				rating: -1
 		] as BasicDBObject)
 
 		def done = 0
