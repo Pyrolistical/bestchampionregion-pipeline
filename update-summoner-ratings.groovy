@@ -10,7 +10,7 @@ MongoUtils.connect {
 	mongo ->
 		def lolapi = mongo.live.lolapi
 
-		def table = mongo.live."summoner_ratings"
+		def table = mongo.live.summoner_ratings
 
 		table.ensureIndex([
 				champion: 1,
