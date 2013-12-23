@@ -2,9 +2,7 @@
 	@Grab("org.thymeleaf:thymeleaf:2.1.2.RELEASE"),
 	@Grab("org.slf4j:slf4j-simple:1.7.5"),
 	@Grab("org.mongodb:mongo-java-driver:2.11.3"),
-	@Grab("com.github.concept-not-found:regulache:1-SNAPSHOT"),
-	@Grab("com.github.concept-not-found:mongo-groovy-extension:1-SNAPSHOT"),
-	@Grab("org.codehaus.groovy.modules.http-builder:http-builder:0.6")
+	@Grab("com.github.concept-not-found:mongo-groovy-extension:1-SNAPSHOT")
 ])
 
 import com.mongodb.*
@@ -13,9 +11,7 @@ import org.thymeleaf.*
 import org.thymeleaf.context.*
 import org.thymeleaf.templateresolver.*
 
-import com.github.concept.not.found.regulache.Regulache
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
-import groovyx.net.http.HttpResponseException
 
 def ordering = Constants.orderings.find {
 	it.key == "best"
@@ -53,7 +49,8 @@ MongoUtils.connect {
 		model["data"] = []
 		Constants.champions.each {
 			champion ->
-				def collection = mongo.live."summoner_ratings_${champion.key}"
+				def summoner = mongo.live.summoner
+				def summoner_ratings = mongo.live.summoner_ratings
 
 				def data = [
 					ordering: ordering,
@@ -64,22 +61,27 @@ MongoUtils.connect {
 				def table = []
 
 				def ratingOrder = ordering.key == "best" ? -1 : 1
-				collection.find().sort([rating: ratingOrder] as BasicDBObject).limit(5).eachWithIndex {
+				summoner_ratings.find([
+						champion: champion.key
+				] as BasicDBObject).sort([rating: ratingOrder] as BasicDBObject).limit(5).eachWithIndex {
 					row, i ->
 						def datum = new HashMap(row)
 						datum["rank"] = i + 1
 						table.add(datum)
 				}
 
-				def lolapi = mongo.live.lolapi
 				def summonerIds = table.collect {
 					it.summonerId
 				}
-				def nameBySummonerId = convertSummonerIdToName(lolapi, summonerIds)
+				def summoners = getSummoner(summoner, summonerIds)
 
 				table.each {
-					it.league = getLeague(lolapi, it.summonerId)
-					it.name = nameBySummonerId[it.summonerId]
+					def summonerId = it.summonerId
+					if (summoners[summonerId] == null) {
+						throw new IllegalStateException("missing summoner name and league for $summonerId")
+					}
+					it.name = summoners[summonerId].name
+					it.league = summoners[summonerId].league
 				}
 
 				data.table = table.collect {
@@ -87,7 +89,6 @@ MongoUtils.connect {
 				}
 
 				model["data"].add(data)
-				println("done $champion.value.name")
 		}
 		def outputPath = new File(outputDirectory, "top")
 		outputPath.mkdirs()
@@ -96,94 +97,17 @@ MongoUtils.connect {
 		}
 }
 
-def convertSummonerIdToName(lolapi, summonerIds) {
-	def result = [:]
-	def remaining = []
-	summonerIds.each {
-		summonerId ->
-			def existing = lolapi.findOne([path: "api/lol/{region}/v1.1/summoner/by-name/{name}", "data.id": summonerId] as BasicDBObject)
-			if (existing) {
-				result[summonerId] = existing.data.name
-			} else {
-				existing = lolapi.findOne([path: "api/lol/{region}/v1.1/summoner/{summonerIds}/name", "data.summoners.id": summonerId] as BasicDBObject)
-				if (existing) {
-					def name = existing.data.summoners.find {
-						it.id == summonerId
-					}.name
-					result[summonerId] = name
-				} else {
-					remaining.add(summonerId)
-				}
-			}
-	}
-	if (!remaining.empty) {
-		def regulache = new Regulache("https://prod.api.pvp.net/", lolapi)
-		remaining.collate(40).each {
-			remaining40 ->
-				try {
-					def (json, cached) = regulache.executeGet(
-							path: "/api/lol/{region}/v1.1/summoner/{summonerIds}/name",
-							"path-parameters": [
-									region: "na",
-									summonerIds: remaining40.join(",")
-							],
-							"transient-queries": [
-									api_key: Api.key()
-							]
-					)
-					remaining40.each {
-						summonerId ->
-							def name = json.summoners.find {
-								it.id == summonerId
-							}.name
-							result[summonerId] = name
-					}
-					println("Resolved an additional ${remaining40.size()} summoner ids")
-				} catch (HttpResponseException e) {
-					println("failed to resolve names for $remaining40")
-					e.printStackTrace()
-				}
-				sleep(1200)
-		}
-	}
-	result
-}
-
-def getLeague(lolapi, summonerId) {
-	def regulache = new Regulache("https://prod.api.pvp.net/", lolapi)
-	try {
-		def (json, cached) = regulache.executeGet(
-				path: "/api/{region}/v2.1/league/by-summoner/{summonerId}",
-				"path-parameters": [
-						region: "na",
-						summonerId: summonerId as String
-				],
-				"transient-queries": [
-						api_key: Api.key()
-				]
-		)
-
-		if (json == null) {
-			throw new Exception("could not find league for $summonerId")
-		}
-		def entry = json."$summonerId".entries.find {
-			it.playerOrTeamId == summonerId as String
-		}
+def getSummoner(summoner, summonerIds) {
+	def summoners = [:]
+	summoner.find([_id: ['$in': summonerIds]] as BasicDBObject).each {
 		def league = Constants.leagues.find {
-			if (it.key == "challenger") {
-				it.value.name.toLowerCase() == entry.tier.toLowerCase()
-			} else {
-				it.value.name.toLowerCase() == "${entry.tier} ${entry.rank}".toLowerCase()
-			}
+			league ->
+				league.key == it.league
 		}
-		if (!cached) {
-			println("$summonerId is ${league.value.name}")
-			sleep(1200)
-		}
-		return league
-	} catch (HttpResponseException e) {
-		println("failed to get league for $summonerId")
-		e.printStackTrace()
+		summoners[it."_id"] = [
+				name: it.name,
+				league: league
+		]
 	}
-	null
+	summoners
 }

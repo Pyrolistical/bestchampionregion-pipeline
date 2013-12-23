@@ -13,7 +13,7 @@ MongoUtils.connect {
 	mongo ->
 		def lolapi = mongo.live.lolapi
 
-		def regulache = new Regulache("https://prod.api.pvp.net/", lolapi)
+		def regulache = new Regulache("http://localhost:30080/", lolapi)
 		lolapi.find([path : "api/lol/{region}/v1.1/summoner/by-name/{name}"] as BasicDBObject).each {
 			def summonerId = it.data.id
 			fetchRankedStats(regulache, summonerId)
@@ -32,9 +32,6 @@ def fetchRankedStats(regulache, summonerId) {
 				],
 				queries: [
 						season: "SEASON3"
-				],
-				"transient-queries": [
-						api_key: Api.key()
 				]
 		)
 	} catch (HttpResponseException e) {

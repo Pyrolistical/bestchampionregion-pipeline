@@ -13,7 +13,7 @@ MongoUtils.connect {
 	mongo ->
 		def lolapi = mongo.live.lolapi
 
-		def regulache = new Regulache("https://prod.api.pvp.net/", lolapi)
+		def regulache = new Regulache("http://localhost:30080/", lolapi)
 		def filename = args[0]
 		new File(filename).eachLine {
 			def name = it.replace(" ", "")
@@ -30,9 +30,6 @@ def findByName(regulache, name) {
 				"path-parameters": [
 						region: "na",
 						name: name
-				],
-				"transient-queries": [
-						api_key: Api.key()
 				]
 		)
 		json.id

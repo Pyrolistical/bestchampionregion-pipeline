@@ -22,7 +22,7 @@ MongoUtils.connect {
 			}
 		}
 
-		def regulache = new Regulache("https://prod.api.pvp.net/", lolapi)
+		def regulache = new Regulache("http://localhost:30080/", lolapi)
 		summonerIds.each {
 			summonerId ->
 				def cached = fetch(regulache, summonerId)
@@ -42,9 +42,6 @@ def fetch(regulache, summonerId) {
 				"path-parameters": [
 						region: "na",
 						summonerId: summonerId as String
-				],
-				"transient-queries": [
-						api_key: Api.key()
 				]
 		)
 		if (json == null) {

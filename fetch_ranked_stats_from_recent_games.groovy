@@ -36,7 +36,7 @@ MongoUtils.connect {
 			ids
 		}.flatten().unique(true)
 
-		def regulache = new Regulache("https://prod.api.pvp.net/", lolapi)
+		def regulache = new Regulache("http://localhost:30080/", lolapi)
 		summonerIds.each {
 			summonerId ->
 				def cached = fetchRankedStats(regulache, summonerId)
@@ -59,9 +59,6 @@ def fetchRankedStats(regulache, summonerId) {
 				],
 				queries: [
 						season: "SEASON3"
-				],
-				"transient-queries": [
-						api_key: Api.key()
 				]
 		)
 		if (json == null) {
