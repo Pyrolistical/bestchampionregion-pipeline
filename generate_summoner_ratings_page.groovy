@@ -87,14 +87,14 @@ MongoUtils.connect {
 		def resultSet = summoner_ratings.find([
 				champion: champion.key
 		] as BasicDBObject).sort([rating: ratingOrder] as BasicDBObject).limit(100)
-		println("queried ${(System.currentTimeMillis() - start)/1000000d}")
+		println("queried ${(System.currentTimeMillis() - start)/1000d}")
 		resultSet.eachWithIndex {
 			row, i ->
 				def datum = new HashMap(row)
 				datum["rank"] = i + 1
 				data.add(datum)
 		}
-		println("pulled ${(System.currentTimeMillis() - start)/1000000d}")
+		println("pulled ${(System.currentTimeMillis() - start)/1000d}")
 
 		def summonerIds = data.collect {
 			it.summonerId
@@ -102,8 +102,12 @@ MongoUtils.connect {
 		def summoners = getSummoner(summoner, summonerIds)
 
 		data.each {
-			it.name = summoners[it.summonerId].name
-			it.league = summoners[it.summonerId].league
+			def summonerId = it.summonerId
+			if (summoners[summonerId] == null) {
+				throw new IllegalStateException("missing summoner name and league for $summonerId")
+			}
+			it.name = summoners[summonerId].name
+			it.league = summoners[summonerId].league
 		}
 		println("summonered ${(System.currentTimeMillis() - start)/1000d}")
 
