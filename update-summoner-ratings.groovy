@@ -8,42 +8,40 @@ import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 
 MongoUtils.connect {
 	mongo ->
-		def lolapi = mongo.live.lolapi
+		def ranked_stats = mongo.live.ranked_stats_by_summoner_1p2
 
-		def table = mongo.live.summoner_ratings
+		def summoner_ratings = mongo.live.summoner_ratings
 
-		table.ensureIndex([
+		summoner_ratings.ensureIndex([
 				champion: 1,
 				summonerId: 1
 		] as BasicDBObject, [
 				unique: true
 		] as BasicDBObject)
 
-		table.ensureIndex([
+		summoner_ratings.ensureIndex([
 				champion: 1,
 				rating: -1
 		] as BasicDBObject)
 
 		def done = 0
-		lolapi.find([
-				path: "api/lol/{region}/v1.1/stats/by-summoner/{summonerId}/ranked",
+		ranked_stats.find([
 				data: ['$ne': null]
+		] as BasicDBObject, [
+		        "data.summonerId": 1,
+				"data.champions.name": 1,
+				"data.champions.stats.totalSessionsWon": 1,
+				"data.champions.stats.totalSessionsLost": 1
 		] as BasicDBObject).each {
-			rankedStats ->
-				def summonerId = rankedStats.data.getInt("summonerId")
-				rankedStats.data.champions.each {
+			rankedStat ->
+				def summonerId = rankedStat.data.getInt("summonerId")
+				rankedStat.data.champions.each {
 					champion ->
-						if (champion.name == null) {
+						if (champion.name == "Combined") {
 							return
 						}
-						def won = champion.stats.find {
-							stat ->
-								stat.name == "TOTAL_SESSIONS_WON"
-						}.getInt("value")
-						def lost = champion.stats.find {
-							stat ->
-								stat.name == "TOTAL_SESSIONS_LOST"
-						}.getInt("value")
+						def won = champion.stats.totalSessionsWon
+						def lost = champion.stats.totalSessionsLost
 						def rating = won - lost
 						def row = [
 								summonerId: summonerId,
@@ -52,7 +50,7 @@ MongoUtils.connect {
 								lost: lost,
 								rating: rating
 						]
-						table.update(
+						summoner_ratings.update(
 								[summonerId: summonerId, champion: champion.name] as BasicDBObject,
 								row as BasicDBObject,
 								true,
