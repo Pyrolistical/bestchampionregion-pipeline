@@ -2,7 +2,8 @@
 	@Grab("org.thymeleaf:thymeleaf:2.1.2.RELEASE"),
 	@Grab("org.slf4j:slf4j-simple:1.7.5"),
 	@Grab("org.mongodb:mongo-java-driver:2.11.3"),
-	@Grab("com.github.concept-not-found:mongo-groovy-extension:1-SNAPSHOT")
+	@Grab("com.github.concept-not-found:mongo-groovy-extension:1-SNAPSHOT"),
+	@Grab("com.github.pyrolistical:best-champion-region-services:1-SNAPSHOT")
 ])
 
 import com.mongodb.*
@@ -12,6 +13,8 @@ import org.thymeleaf.context.*
 import org.thymeleaf.templateresolver.*
 
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
+
+import com.github.best.champion.region.service.*
 
 def ordering = Constants.orderings.find {
 	it.key == "best"
@@ -46,10 +49,10 @@ def model = context.variables
 
 MongoUtils.connect {
 	mongo ->
+		def summonerService = new SummonerService(mongo)
 		model["data"] = []
 		Constants.champions.each {
 			champion ->
-				def summoner = mongo.live.summoner
 				def summoner_ratings = mongo.live.summoner_ratings
 
 				def data = [
@@ -73,7 +76,7 @@ MongoUtils.connect {
 				def summonerIds = table.collect {
 					it.summonerId
 				}
-				def summoners = getSummoner(summoner, summonerIds)
+				def summoners = summonerService.getSummonersByIds(summonerIds)
 
 				table.each {
 					def summonerId = it.summonerId
@@ -97,17 +100,3 @@ MongoUtils.connect {
 		}
 }
 
-def getSummoner(summoner, summonerIds) {
-	def summoners = [:]
-	summoner.find([_id: ['$in': summonerIds]] as BasicDBObject).each {
-		def league = Constants.leagues.find {
-			league ->
-				league.key == it.league
-		}
-		summoners[it."_id"] = [
-				name: it.name,
-				league: league
-		]
-	}
-	summoners
-}

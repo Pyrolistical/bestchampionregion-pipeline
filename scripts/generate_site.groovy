@@ -1,6 +1,10 @@
-@Grab("commons-io:commons-io:2.4")
+@Grapes([
+	@Grab("commons-io:commons-io:2.4"),
+	@Grab("com.github.pyrolistical:best-champion-region-services:1-SNAPSHOT")
+])
 
 import org.apache.commons.io.*
+import com.github.best.champion.region.service.*
 
 def templateDirectory = "/Users/rchen/dev/projects/github.com/concept-not-found/bestchampionregion/template"
 def outputDirectory = "/Users/rchen/dev/projects/github.com/concept-not-found/bestchampionregion-pages"
@@ -72,19 +76,13 @@ def champions(templateDirectory, outputDirectory, championList) {
 		champion ->
 			def classloader = new GroovyClassLoader()
 			def shell = new GroovyShell(classloader, getBinding())
-			try {
-				println("start $champion.value.name")
-				shell.run(new File("generate_summoner_ratings_page.groovy"), [
-						"best",
-						champion.key,
-						templateDirectory,
-						outputDirectory
-				] as String[])
-				println("done $champion.value.name")
-			} catch (DoOverException e) {
-				println("doing over: ${e.message}")
-				doOver.add(champion)
-			}
+			shell.run(new File("generate_summoner_ratings_page.groovy"), [
+					"best",
+					champion.key,
+					templateDirectory,
+					outputDirectory
+			] as String[])
+			println("done $champion.value.name")
 	}
 	champions(templateDirectory, outputDirectory, doOver)
 }

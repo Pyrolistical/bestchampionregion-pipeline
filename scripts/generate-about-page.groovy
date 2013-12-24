@@ -33,9 +33,8 @@ def model = context.variables
 
 MongoUtils.connect {
 	mongo ->
-		def lolapi = mongo.live.lolapi
 
-		def numberOfSummoners = lolapi.count([path: "api/lol/{region}/v1.1/stats/by-summoner/{summonerId}/ranked"] as BasicDBObject)
+		def numberOfSummoners = mongo.live.ranked_stats_by_summoner_1p2.count()
 		model["numberOfSummoners"] = numberOfSummoners
 
 		def outputPath = new File(outputDirectory, "about")

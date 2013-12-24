@@ -2,16 +2,20 @@
 	@Grab("org.thymeleaf:thymeleaf:2.1.2.RELEASE"),
 	@Grab("org.slf4j:slf4j-simple:1.7.5"),
 	@Grab("org.mongodb:mongo-java-driver:2.11.3"),
-	@Grab("com.github.concept-not-found:mongo-groovy-extension:1-SNAPSHOT")
+	@Grab("com.github.concept-not-found:mongo-groovy-extension:1-SNAPSHOT"),
+	@Grab("com.github.pyrolistical:best-champion-region-services:1-SNAPSHOT")
 ])
 
 import com.mongodb.*
+import com.github.best.champion.region.service.*
 
 import org.thymeleaf.*
 import org.thymeleaf.context.*
 import org.thymeleaf.templateresolver.*
 
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
+
+def start = System.currentTimeMillis()
 
 def ordering = args[0]
 if (!ordering) {
@@ -52,7 +56,7 @@ def region = Constants.regions.find {
 def season = Constants.seasons.find {
 	it.key == "season3"
 }
-def start = System.currentTimeMillis()
+
 def templateEngine = new TemplateEngine()
 def fileTemplateResolver = new FileTemplateResolver()
 fileTemplateResolver.setPrefix("$templateDirectory/ordering/champion/region/season/")
@@ -77,8 +81,8 @@ println("init ${(System.currentTimeMillis() - start)/1000d}")
 
 MongoUtils.connect {
 	mongo ->
+		def summonerService = new SummonerService(mongo)
 		println("connected ${(System.currentTimeMillis() - start)/1000d}")
-		def summoner = mongo.live.summoner
 		def summoner_ratings = mongo.live.summoner_ratings
 
 		def data = []
@@ -99,7 +103,7 @@ MongoUtils.connect {
 		def summonerIds = data.collect {
 			it.summonerId
 		}
-		def summoners = getSummoner(summoner, summonerIds)
+		def summoners = summonerService.getSummonersByIds(summonerIds)
 
 		data.each {
 			def summonerId = it.summonerId
@@ -125,19 +129,4 @@ MongoUtils.connect {
 			templateEngine.process("index", context, it)
 		}
 		println("templated ${(System.currentTimeMillis() - start)/1000d}")
-}
-
-def getSummoner(summoner, summonerIds) {
-	def summoners = [:]
-	summoner.find([_id: ['$in': summonerIds]] as BasicDBObject).each {
-		def league = Constants.leagues.find {
-			league ->
-				league.key == it.league
-		}
-		summoners[it."_id"] = [
-				name: it.name,
-				league: league
-		]
-	}
-	summoners
 }
