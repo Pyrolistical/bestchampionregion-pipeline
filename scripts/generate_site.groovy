@@ -51,9 +51,15 @@ def statics(templateDirectory, outputDirectory) {
 				new File(templateDirectory, it),
 				new File(outputDirectory, it))
 	}
-	FileUtils.copyFile(
-			new File(templateDirectory, "index.html"),
-			new File(outputDirectory, "index.html"))
+
+	[
+			"CNAME",
+			"index.html"
+	].each {
+		FileUtils.copyFile(
+			new File(templateDirectory, it),
+			new File(outputDirectory, it))
+	}
 }
 
 def about(templateDirectory, outputDirectory) {
@@ -64,27 +70,12 @@ def about(templateDirectory, outputDirectory) {
 }
 
 def champions(templateDirectory, outputDirectory) {
-	champions(templateDirectory, outputDirectory, Constants.champions)
-}
-
-def champions(templateDirectory, outputDirectory, championList) {
-	if (championList.empty) {
-		return
-	}
-	def doOver = []
-	championList.each {
-		champion ->
-			def classloader = new GroovyClassLoader()
-			def shell = new GroovyShell(classloader, getBinding())
-			shell.run(new File("generate_summoner_ratings_page.groovy"), [
-					"best",
-					champion.key,
-					templateDirectory,
-					outputDirectory
-			] as String[])
-			println("done $champion.value.name")
-	}
-	champions(templateDirectory, outputDirectory, doOver)
+	def classloader = new GroovyClassLoader()
+	def shell = new GroovyShell(classloader, getBinding())
+	shell.run(new File("generate_summoner_ratings_page.groovy"), [
+			templateDirectory,
+			outputDirectory
+	] as String[])
 }
 
 def top(templateDirectory, outputDirectory) {

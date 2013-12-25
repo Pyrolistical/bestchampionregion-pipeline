@@ -34,7 +34,7 @@ def model = context.variables
 MongoUtils.connect {
 	mongo ->
 
-		def numberOfSummoners = mongo.live.ranked_stats_by_summoner_1p2.count()
+		def numberOfSummoners = mongo.live.ranked_summoners.count()
 		model["numberOfSummoners"] = numberOfSummoners
 
 		def outputPath = new File(outputDirectory, "about")

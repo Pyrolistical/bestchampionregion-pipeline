@@ -11,7 +11,7 @@ def class SummonerService {
 	def summonerCollection
 
 	def SummonerService(mongo) {
-		summonerCollection = mongo.live.summoner
+		summonerCollection = mongo.live.ranked_summoners
 		regulache = new Regulache("http://localhost:30080/", mongo.live.league_by_summoner_2p2)
 	}
 
@@ -88,19 +88,32 @@ def class SummonerService {
 					]
 			)
 
-			if (json == null) {
-				throw new Exception("could not find league for $summonerId")
+			if (json == null || json."$summonerId" == null) {
+				println("could not find league for $summonerId, defaulting to Bronze IV")
+				return "bronze-5"
 			}
+
+			def tier = json."$summonerId".tier
+
+			// default to V because can't fetch rank for some summoners due to ranked decay
+			def rank = "V"
 			def entry = json."$summonerId".entries.find {
 				it.playerOrTeamId == summonerId as String
 			}
-			def league = Constants.leagues.find {
-				if (it.key == "challenger") {
-					it.value.name.toLowerCase() == entry.tier.toLowerCase()
-				} else {
-					it.value.name.toLowerCase() == "${entry.tier} ${entry.rank}".toLowerCase()
-				}
+			if (entry != null) {
+				rank = entry.rank
 			}
+
+			def league = Constants.leagues.find {
+				def name
+				if (it.key == "challenger") {
+					name = tier
+				} else {
+					name = "$tier $rank"
+				}
+				it.value.name.equalsIgnoreCase(name)
+			}
+
 			if (!cached) {
 				println("$summonerId is ${league.value.name}")
 			}
