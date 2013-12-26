@@ -51,7 +51,7 @@ MongoUtils.connect {
 	mongo ->
 		def summonerService = new SummonerService(mongo)
 		model["data"] = []
-		Constants.champions.each {
+		Champion.each {
 			champion ->
 				def summoner_ratings = mongo.live.summoner_ratings
 
@@ -65,7 +65,7 @@ MongoUtils.connect {
 
 				def ratingOrder = ordering.key == "best" ? -1 : 1
 				summoner_ratings.find([
-						champion: champion.key
+						champion: champion.name()
 				] as BasicDBObject).sort([rating: ratingOrder] as BasicDBObject).limit(5).eachWithIndex {
 					row, i ->
 						def datum = new HashMap(row)

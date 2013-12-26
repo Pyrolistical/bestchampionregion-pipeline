@@ -45,68 +45,68 @@ fileTemplateResolver.setPrefix("$templateDirectory/ordering/champion/region/seas
 fileTemplateResolver.setSuffix(".html")
 templateEngine.setTemplateResolver(fileTemplateResolver)
 
-Constants.champions.each {
+Champion.each {
 	champion ->
-	def context = new Context()
-	def model = context.variables
+		def context = new Context()
+		def model = context.variables
 
-	model["active"] = [
-		ordering: ordering,
-		champion: champion,
-		region: region,
-		season: season
-	]
+		model["active"] = [
+			ordering: ordering,
+			champion: champion,
+			region: region,
+			season: season
+		]
 
-	model["orderings"] = Constants.orderings
-	model["champions"] = Constants.champions
-	model["regions"] = Constants.regions
-	model["seasons"] = Constants.seasons
+		model["orderings"] = Constants.orderings
+		model["champions"] = Champion.values()
+		model["regions"] = Constants.regions
+		model["seasons"] = Constants.seasons
 
-	MongoUtils.connect {
-		mongo ->
-			def summonerService = new SummonerService(mongo)
-			def summoner_ratings = mongo.live.summoner_ratings
+		MongoUtils.connect {
+			mongo ->
+				def summonerService = new SummonerService(mongo)
+				def summoner_ratings = mongo.live.summoner_ratings
 
-			def data = []
+				def data = []
 
-			def ratingOrder = ordering.key == "best" ? -1 : 1
-			def resultSet = summoner_ratings.find([
-					champion: champion.key
-			] as BasicDBObject).sort([rating: ratingOrder] as BasicDBObject).limit(100)
-			resultSet.eachWithIndex {
-				row, i ->
-					def datum = new HashMap(row)
-					datum["rank"] = i + 1
-					data.add(datum)
-			}
-
-			def summonerIds = data.collect {
-				it.summonerId
-			}
-			def summoners = summonerService.getSummonersByIds(summonerIds)
-
-			data.each {
-				def summonerId = it.summonerId
-				if (summoners[summonerId] == null) {
-					throw new IllegalStateException("missing summoner name and league for $summonerId")
+				def ratingOrder = ordering.key == "best" ? -1 : 1
+				def resultSet = summoner_ratings.find([
+						champion: champion.name()
+				] as BasicDBObject).sort([rating: ratingOrder] as BasicDBObject).limit(100)
+				resultSet.eachWithIndex {
+					row, i ->
+						def datum = new HashMap(row)
+						datum["rank"] = i + 1
+						data.add(datum)
 				}
-				it.name = summoners[summonerId].name
-				it.league = summoners[summonerId].league
-			}
 
-			model["data"] = data.collect {
-				it.subMap(["rank", "league", "name", "won", "lost", "rating"])
-			}
+				def summonerIds = data.collect {
+					it.summonerId
+				}
+				def summoners = summonerService.getSummonersByIds(summonerIds)
 
-			def orderingPath = ordering.value.path
-			def championPath = champion.value.path
-			def regionPath = region.value.path
-			def seasonPath = season.value.path
-			def outputPath = new File(outputDirectory, "$orderingPath/$championPath/$regionPath/$seasonPath")
-			outputPath.mkdirs()
-			new File(outputPath, "index.html").withWriter {
-				templateEngine.process("index", context, it)
-			}
-			println("templated ${champion.value.name} ${(System.currentTimeMillis() - start)/1000d}")
-	}
+				data.each {
+					def summonerId = it.summonerId
+					if (summoners[summonerId] == null) {
+						throw new IllegalStateException("missing summoner name and league for $summonerId")
+					}
+					it.name = summoners[summonerId].name
+					it.league = summoners[summonerId].league
+				}
+
+				model["data"] = data.collect {
+					it.subMap(["rank", "league", "name", "won", "lost", "rating"])
+				}
+
+				def orderingPath = ordering.value.path
+				def championPath = champion.path
+				def regionPath = region.value.path
+				def seasonPath = season.value.path
+				def outputPath = new File(outputDirectory, "$orderingPath/$championPath/$regionPath/$seasonPath")
+				outputPath.mkdirs()
+				new File(outputPath, "index.html").withWriter {
+					templateEngine.process("index", context, it)
+				}
+				println("templated ${champion.label} ${(System.currentTimeMillis() - start)/1000d}")
+		}
 }
