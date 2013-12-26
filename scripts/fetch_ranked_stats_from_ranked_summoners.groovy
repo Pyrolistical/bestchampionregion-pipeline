@@ -9,38 +9,43 @@ import com.github.concept.not.found.regulache.Regulache
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 import groovyx.net.http.HttpResponseException
 
-def start = System.currentTimeMillis()
+
 MongoUtils.connect {
 	mongo ->
 		def ranked_summoners = mongo.live.ranked_summoners
 		def ranked_stats = mongo.live.ranked_stats_by_summoner_1p2
 
-		def n = 0
-		println("connected ${(System.currentTimeMillis() - start)/1000d}")
+		def done = 0
 		def summonerIds = ranked_summoners.find(
 		).collect {
 			it._id
 		} as Set
-		println("ranked summoners ${(System.currentTimeMillis() - start)/1000d}")
 
-		def finishedSummonerIds = ranked_stats.find([] as BasicDBObject, ["data.summonerId": 1] as BasicDBObject).collect {
+		def finishedSummonerIds = ranked_stats.find([
+		] as BasicDBObject, [
+				"data.summonerId": 1
+		] as BasicDBObject).collect {
 			it.data.summonerId
 		} as Set
-		println("finished summoners ${(System.currentTimeMillis() - start)/1000d}")
 		summonerIds.removeAll(finishedSummonerIds)
-		println("remaining summoners ${(System.currentTimeMillis() - start)/1000d}")
-
+		def total = summonerIds.size()
+		def start = System.currentTimeMillis()
 		def regulache = new Regulache("http://localhost:30080/", ranked_stats)
 		summonerIds.each {
 			summonerId ->
-				def cached = fetchRankedStats(regulache, summonerId)
-				if (!cached) {
-					println("${++n}/${summonerIds.size()} done $summonerId")
-				} else {
-					println("already did $summonerId, skipped")
+				fetchRankedStats(regulache, summonerId)
+				def previousPercentage = 100*done/total as int
+				done++
+				def currentPercentage = 100*done/total as int
+				if (previousPercentage != currentPercentage && currentPercentage % 5 == 0) {
+					def timeRemaining = (System.currentTimeMillis() - start)*(total - done)/done as int
+					def hours = timeRemaining / (1000 * 60 * 60) as int
+					def minutes = (timeRemaining / (1000 * 60) as int) % 60
+					def seconds = (timeRemaining / 1000 as int) % 60
+					def duration = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+					println("done $currentPercentage% $done/$total - remaining $duration")
 				}
 		}
-		println("done ${(System.currentTimeMillis() - start)/1000d}")
 }
 
 def fetchRankedStats(regulache, summonerId) {

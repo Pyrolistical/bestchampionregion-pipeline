@@ -23,13 +23,14 @@ MongoUtils.connect {
 				unique: true
 		] as BasicDBObject)
 
-		def n = 0
-		def summonerCount = recent_games.count([
+		def done = 0
+		def total = recent_games.count([
 				"data.games.level": 30,
 				"data.games.subType": [
 						'$in': rankedSubTypes
 				]
 		] as BasicDBObject)
+		def start = System.currentTimeMillis()
 		recent_games.find([
 				"data.games.level": 30,
 				"data.games.subType": [
@@ -54,6 +55,16 @@ MongoUtils.connect {
 							false
 					)
 			}
-			println("${++n}/$summonerCount done $summonerId")
+			def previousPercentage = 100*done/total as int
+			done++
+			def currentPercentage = 100*done/total as int
+			if (previousPercentage != currentPercentage && currentPercentage % 5 == 0) {
+				def timeRemaining = (System.currentTimeMillis() - start)*(total - done)/done as int
+				def hours = timeRemaining / (1000 * 60 * 60) as int
+				def minutes = (timeRemaining / (1000 * 60) as int) % 60
+				def seconds = (timeRemaining / 1000 as int) % 60
+				def duration = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+				println("done $currentPercentage% $done/$total - remaining $duration")
+			}
 		}
 }

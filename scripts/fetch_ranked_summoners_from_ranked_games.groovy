@@ -11,8 +11,9 @@ MongoUtils.connect {
 		def ranked_games = mongo.live.ranked_games
 		def ranked_summoners = mongo.live.ranked_summoners
 
-		def n = 0
-		def gamesCount = ranked_games.count()
+		def done = 0
+		def total = ranked_games.count()
+		def start = System.currentTimeMillis()
 		ranked_games.find([
 		] as BasicDBObject, [
 				"summonerId": 1,
@@ -25,14 +26,22 @@ MongoUtils.connect {
 						def summonerId = fellowPlayer.summonerId
 						upsertSummoner(summonerId, ranked_summoners)
 				}
-				if (++n % 1000 == 0) {
-					println("$n/$gamesCount done")
+				def previousPercentage = 100*done/total as int
+				done++
+				def currentPercentage = 100*done/total as int
+				if (previousPercentage != currentPercentage && currentPercentage % 10 == 0) {
+					def timeRemaining = (System.currentTimeMillis() - start)*(total - done)/done as int
+					def hours = timeRemaining / (1000 * 60 * 60) as int
+					def minutes = (timeRemaining / (1000 * 60) as int) % 60
+					def seconds = (timeRemaining / 1000 as int) % 60
+					def duration = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+					println("done $currentPercentage% $done/$total - remaining $duration")
 				}
 		}
 }
 
 def upsertSummoner(summonerId, ranked_summoners) {
-	def r = ranked_summoners.update(
+	ranked_summoners.update(
 			[
 					_id: summonerId
 			] as BasicDBObject,

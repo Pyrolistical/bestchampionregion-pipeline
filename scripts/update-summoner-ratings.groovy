@@ -3,7 +3,6 @@
 	@Grab("org.mongodb:mongo-java-driver:2.11.3")
 ])
 import com.mongodb.*
-
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 
 MongoUtils.connect {
@@ -25,8 +24,21 @@ MongoUtils.connect {
 		] as BasicDBObject)
 
 		def done = 0
+
+		def lastRun = mongo.live.process.findOne([
+				name: "update summoner ratings"
+		] as BasicDBObject)."last-run"
+
+		def total = ranked_stats.count([
+				data: ['$ne': null],
+				"last-retrieved": ['$gt': lastRun]
+		] as BasicDBObject)
+
+		def start = System.currentTimeMillis()
+
 		ranked_stats.find([
-				data: ['$ne': null]
+				data: ['$ne': null],
+				"last-retrieved": ['$gt': lastRun]
 		] as BasicDBObject, [
 		        "data.summonerId": 1,
 				"data.champions.name": 1,
@@ -34,7 +46,7 @@ MongoUtils.connect {
 				"data.champions.stats.totalSessionsLost": 1
 		] as BasicDBObject).each {
 			rankedStat ->
-				def summonerId = rankedStat.data.getInt("summonerId")
+				def summonerId = rankedStat.data.summonerId
 				rankedStat.data.champions.each {
 					champion ->
 						if (champion.name == "Combined") {
@@ -57,9 +69,25 @@ MongoUtils.connect {
 								false
 						)
 				}
-				if (++done % 1000 == 0) {
-					println("done $done")
+				def previousPercentage = 100*done/total as int
+				done++
+				def currentPercentage = 100*done/total as int
+				if (previousPercentage != currentPercentage && currentPercentage % 5 == 0) {
+					def timeRemaining = (System.currentTimeMillis() - start)*(total - done)/done as int
+					def hours = timeRemaining / (1000 * 60 * 60) as int
+					def minutes = (timeRemaining / (1000 * 60) as int) % 60
+					def seconds = (timeRemaining / 1000 as int) % 60
+					def duration = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+					println("done $currentPercentage% $done/$total - remaining $duration")
 				}
 		}
+		mongo.live.process.update([
+				name: "update summoner ratings"
+		] as BasicDBObject, [
+				name: "update summoner ratings",
+				"last-run": start
+		] as BasicDBObject,
+				true,
+				false)
 }
 
