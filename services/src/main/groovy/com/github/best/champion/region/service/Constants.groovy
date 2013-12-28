@@ -45,7 +45,7 @@ def class Constants {
 			["silver-3", "Silver III"],
 			["silver-4", "Silver IV"],
 			["silver-5", "Silver V"],
-			["Bronze-1", "Bronze I"],
+			["bronze-1", "Bronze I"],
 			["bronze-2", "Bronze II"],
 			["bronze-3", "Bronze III"],
 			["bronze-4", "Bronze IV"],
