@@ -20,6 +20,9 @@ MongoUtils.connect {
 		} as Set
 
 		def finishedSummonerIds = recent_games.find([
+				"data": [
+						'$ne': null
+				]
 		] as BasicDBObject, [
 				"data.summonerId": 1
 		] as BasicDBObject).collect {
@@ -58,9 +61,6 @@ def fetchRecentGames(regulache, summonerId) {
 						summonerId: summonerId as String
 				]
 		)
-		if (json == null) {
-			println("$summonerId doesn't have any recent games")
-		}
 		cached
 	} catch (HttpResponseException e) {
 		throw new Exception("failed to recent games for $summonerId", e)

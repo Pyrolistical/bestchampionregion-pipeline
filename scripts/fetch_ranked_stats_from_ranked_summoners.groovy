@@ -22,6 +22,9 @@ MongoUtils.connect {
 		} as Set
 
 		def finishedSummonerIds = ranked_stats.find([
+				data: [
+						'$ne': null
+				]
 		] as BasicDBObject, [
 				"data.summonerId": 1
 		] as BasicDBObject).collect {
@@ -37,7 +40,7 @@ MongoUtils.connect {
 				def previousPercentage = 100*done/total as int
 				done++
 				def currentPercentage = 100*done/total as int
-				if (previousPercentage != currentPercentage && currentPercentage % 5 == 0) {
+				if (previousPercentage != currentPercentage && currentPercentage % 1 == 0) {
 					def timeRemaining = (System.currentTimeMillis() - start)*(total - done)/done as int
 					def hours = timeRemaining / (1000 * 60 * 60) as int
 					def minutes = (timeRemaining / (1000 * 60) as int) % 60
@@ -60,9 +63,6 @@ def fetchRankedStats(regulache, summonerId) {
 						season: "SEASON3"
 				]
 		)
-		if (json == null) {
-			println("$summonerId doesn't play ranked")
-		}
 		cached
 	} catch (HttpResponseException e) {
 		throw new Exception("failed to fetch stats for $summonerId", e)
