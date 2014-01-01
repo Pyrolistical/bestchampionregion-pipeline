@@ -1,10 +1,6 @@
 package com.github.best.champion.region.service
 
 def class Constants {
-	def static orderings = asText(
-			["best"],
-			["worst"]
-	)
 
 	def static regions = asText(
 			["NA"],

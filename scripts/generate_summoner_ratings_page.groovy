@@ -27,10 +27,6 @@ if (!outputDirectory) {
 	throw new IllegalArgumentException("required outputDirectory parameter")
 }
 
-def ordering = Constants.orderings.find {
-	it.key == "best"
-}
-
 def region = Constants.regions.find {
 	it.key == "NA"
 }
@@ -41,7 +37,7 @@ def season = Constants.seasons.find {
 
 def templateEngine = new TemplateEngine()
 def fileTemplateResolver = new FileTemplateResolver()
-fileTemplateResolver.setPrefix("$templateDirectory/ordering/champion/region/season/")
+fileTemplateResolver.setPrefix("$templateDirectory/best/champion/region/season/")
 fileTemplateResolver.setSuffix(".html")
 templateEngine.setTemplateResolver(fileTemplateResolver)
 
@@ -51,16 +47,12 @@ Champion.each {
 		def model = context.variables
 
 		model["active"] = [
-			ordering: ordering,
 			champion: champion,
 			region: region,
 			season: season
 		]
 
-		model["orderings"] = Constants.orderings
 		model["champions"] = Champion.values()
-		model["regions"] = Constants.regions
-		model["seasons"] = Constants.seasons
 
 		MongoUtils.connect {
 			mongo ->
@@ -69,7 +61,7 @@ Champion.each {
 
 				def data = []
 
-				def ratingOrder = ordering.key == "best" ? -1 : 1
+				def ratingOrder = -1
 				def resultSet = summoner_ratings.find([
 						champion: champion.name()
 				] as BasicDBObject).sort([rating: ratingOrder] as BasicDBObject).limit(100)
@@ -98,11 +90,10 @@ Champion.each {
 					it.subMap(["rank", "league", "name", "won", "lost", "rating"])
 				}
 
-				def orderingPath = ordering.value.path
 				def championPath = champion.path
 				def regionPath = region.value.path
 				def seasonPath = season.value.path
-				def outputPath = new File(outputDirectory, "$orderingPath/$championPath/$regionPath/$seasonPath")
+				def outputPath = new File(outputDirectory, "best/$championPath/$regionPath/$seasonPath")
 				outputPath.mkdirs()
 				new File(outputPath, "index.html").withWriter {
 					templateEngine.process("index", context, it)

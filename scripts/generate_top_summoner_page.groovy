@@ -16,10 +16,6 @@ import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 
 import com.github.best.champion.region.service.*
 
-def ordering = Constants.orderings.find {
-	it.key == "best"
-}
-
 def templateDirectory = args[0]
 if (!templateDirectory) {
 	throw new IllegalArgumentException("required templateDirectory parameter")
@@ -40,7 +36,7 @@ def season = Constants.seasons.find {
 
 def templateEngine = new TemplateEngine()
 def fileTemplateResolver = new FileTemplateResolver()
-fileTemplateResolver.setPrefix("$templateDirectory/top/")
+fileTemplateResolver.setPrefix("$templateDirectory/top/summoner/region/season/")
 fileTemplateResolver.setSuffix(".html")
 templateEngine.setTemplateResolver(fileTemplateResolver)
 
@@ -55,15 +51,17 @@ MongoUtils.connect {
 			champion ->
 				def summoner_ratings = mongo.live.summoner_ratings
 
+				model.active = [
+						region: region,
+						season: season
+				]
+
 				def data = [
-					ordering: ordering,
 					champion: champion,
-					region: region,
-					season: season
 				]
 				def table = []
 
-				def ratingOrder = ordering.key == "best" ? -1 : 1
+				def ratingOrder = -1
 				summoner_ratings.find([
 						champion: champion.name()
 				] as BasicDBObject).sort([rating: ratingOrder] as BasicDBObject).limit(5).eachWithIndex {
@@ -91,9 +89,9 @@ MongoUtils.connect {
 					it.subMap(["rank", "league", "name", "rating"])
 				}
 
-				model["data"].add(data)
+				model.data.add(data)
 		}
-		def outputPath = new File(outputDirectory, "top")
+		def outputPath = new File(outputDirectory, "top/summoner/${region.value.path}/${season.value.path}")
 		outputPath.mkdirs()
 		new File(outputPath, "index.html").withWriter {
 			templateEngine.process("index", context, it)

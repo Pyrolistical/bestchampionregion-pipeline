@@ -4,7 +4,6 @@
 ])
 
 import org.apache.commons.io.*
-import com.github.best.champion.region.service.*
 
 def templateDirectory = "/Users/rchen/dev/projects/github.com/concept-not-found/bestchampionregion/template"
 def outputDirectory = "/Users/rchen/dev/projects/github.com/concept-not-found/bestchampionregion-pages"
@@ -23,8 +22,9 @@ def all(templateDirectory, outputDirectory) {
 	clean(templateDirectory, outputDirectory)
 	statics(templateDirectory, outputDirectory)
 	about(templateDirectory, outputDirectory)
-	champions(templateDirectory, outputDirectory)
-	top(templateDirectory, outputDirectory)
+	summoner_ratings(templateDirectory, outputDirectory)
+	top_summoner(templateDirectory, outputDirectory)
+	top_champion(templateDirectory, outputDirectory)
 }
 
 def clean(templateDirectory, outputDirectory) {
@@ -69,7 +69,7 @@ def about(templateDirectory, outputDirectory) {
 	] as String[])
 }
 
-def champions(templateDirectory, outputDirectory) {
+def summoner_ratings(templateDirectory, outputDirectory) {
 	def classloader = new GroovyClassLoader()
 	def shell = new GroovyShell(classloader, getBinding())
 	shell.run(new File("generate_summoner_ratings_page.groovy"), [
@@ -78,8 +78,15 @@ def champions(templateDirectory, outputDirectory) {
 	] as String[])
 }
 
-def top(templateDirectory, outputDirectory) {
-	run(new File("generate_top_page.groovy"), [
+def top_summoner(templateDirectory, outputDirectory) {
+	run(new File("generate_top_summoner_page.groovy"), [
+			templateDirectory,
+			outputDirectory
+	] as String[])
+}
+
+def top_champion(templateDirectory, outputDirectory) {
+	run(new File("generate_top_champion_page.groovy"), [
 			templateDirectory,
 			outputDirectory
 	] as String[])
