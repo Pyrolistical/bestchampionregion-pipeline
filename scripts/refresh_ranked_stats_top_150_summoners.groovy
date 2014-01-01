@@ -2,7 +2,8 @@
 	@Grab("org.mongodb:mongo-java-driver:2.11.3"),
 	@Grab("com.github.concept-not-found:regulache:1-SNAPSHOT"),
 	@Grab("com.github.concept-not-found:mongo-groovy-extension:1-SNAPSHOT"),
-	@Grab("org.codehaus.groovy.modules.http-builder:http-builder:0.6")
+	@Grab("org.codehaus.groovy.modules.http-builder:http-builder:0.6"),
+	@Grab("com.github.pyrolistical:best-champion-region-services:1-SNAPSHOT")
 ])
 
 import com.mongodb.*
