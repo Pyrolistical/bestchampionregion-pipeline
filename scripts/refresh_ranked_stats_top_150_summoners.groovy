@@ -12,6 +12,7 @@ import groovyx.net.http.HttpResponseException
 
 import java.util.concurrent.TimeUnit
 
+import com.github.best.champion.region.service.*
 
 MongoUtils.connect {
 	mongo ->
