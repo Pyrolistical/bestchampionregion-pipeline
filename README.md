@@ -11,6 +11,7 @@ Tools
 * Maven 3.0.5+ `brew install maven`
 * Mongo 2.4.8+ `brew install mongo`
 * [IntelliJ IDEA 13+ CE](http://www.jetbrains.com/idea/)
+* [Brackets](http://brackets.io/)
 
 Projects
 --------
@@ -42,7 +43,7 @@ The following folder structure will work:
 Generating the Site
 -------------------
 
-All projects are Maven.  Run `mvn clean install` on each one.
+All projects are Maven.  Run `mvn clean install` on each one.  Each Maven project can be import a modules in the same IntelliJ project.
 
 Load data (get latest dump from production) into Mongo using `mongorestore --db live`
 
@@ -54,6 +55,7 @@ Workflow for Developing New Pages
 ---------------------------------
 
 1. create static html template under `~/projects/github.com/concept-not-found/bestchampionregion/template`
+    * Brackets is good for html
     * define [Thymeleaf](http://www.thymeleaf.org/) attributes
     * see other *.html pages for examples
 2. create Groovy script that fetches the data from Mongo and fills in the template under `~/projects/github.com/pyrolistical/bestchampionregion/src/main/groovy/com/github/best/champion/region`
