@@ -1,9 +1,7 @@
-@Grapes([
-@Grab("org.mongodb:mongo-java-driver:2.11.3"),
-@Grab("com.github.concept-not-found:mongo-groovy-extension:1-SNAPSHOT"),
-])
-import com.mongodb.*
+package com.github.best.champion.region
+
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
+import com.mongodb.BasicDBObject
 
 MongoUtils.connect {
 	mongo ->
@@ -62,4 +60,3 @@ MongoUtils.connect {
 		}
 
 }
-

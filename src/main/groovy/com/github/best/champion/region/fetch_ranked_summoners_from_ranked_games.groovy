@@ -1,10 +1,7 @@
-@Grapes([
-	@Grab("org.mongodb:mongo-java-driver:2.11.3"),
-	@Grab("com.github.concept-not-found:mongo-groovy-extension:1-SNAPSHOT"),
-])
+package com.github.best.champion.region
 
-import com.mongodb.*
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
+import com.mongodb.BasicDBObject
 
 MongoUtils.connect {
 	mongo ->
@@ -26,11 +23,11 @@ MongoUtils.connect {
 						def summonerId = fellowPlayer.summonerId
 						upsertSummoner(summonerId, ranked_summoners)
 				}
-				def previousPercentage = 100*done/total as int
+				def previousPercentage = 100 * done / total as int
 				done++
-				def currentPercentage = 100*done/total as int
+				def currentPercentage = 100 * done / total as int
 				if (previousPercentage != currentPercentage && currentPercentage % 10 == 0) {
-					def timeRemaining = (System.currentTimeMillis() - start)*(total - done)/done as int
+					def timeRemaining = (System.currentTimeMillis() - start) * (total - done) / done as int
 					def hours = timeRemaining / (1000 * 60 * 60) as int
 					def minutes = (timeRemaining / (1000 * 60) as int) % 60
 					def seconds = (timeRemaining / 1000 as int) % 60

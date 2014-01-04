@@ -1,4 +1,4 @@
-package com.github.best.champion.region.service
+package com.github.best.champion.region
 
 import com.mongodb.*
 import com.github.concept.not.found.regulache.Regulache

@@ -1,31 +1,17 @@
-@GrabResolver(name="erichseifert.de", root="http://mvn.erichseifert.de/maven2")
-@Grapes([
-	@Grab("de.erichseifert.gral:gral-core:0.10"),
-	@Grab("org.thymeleaf:thymeleaf:2.1.2.RELEASE"),
-	@Grab("org.slf4j:slf4j-simple:1.7.5"),
-	@Grab("org.mongodb:mongo-java-driver:2.11.3"),
-	@Grab("com.github.concept-not-found:mongo-groovy-extension:1-SNAPSHOT"),
-	@Grab("com.github.pyrolistical:best-champion-region-services:1-SNAPSHOT")
-])
+package com.github.best.champion.region
 
-import com.mongodb.*
-
-import org.thymeleaf.*
-import org.thymeleaf.context.*
-import org.thymeleaf.templateresolver.*
-
-import de.erichseifert.gral.data.*
-import de.erichseifert.gral.plots.*
-import de.erichseifert.gral.data.statistics.*
-import de.erichseifert.gral.util.*
-import de.erichseifert.gral.io.plots.*
-
-import com.github.best.champion.region.service.*
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
+import com.mongodb.BasicDBObject
+import de.erichseifert.gral.data.DataTable
+import de.erichseifert.gral.data.EnumeratedData
+import de.erichseifert.gral.io.plots.DrawableWriterFactory
+import de.erichseifert.gral.plots.BarPlot
+import de.erichseifert.gral.util.Insets2D
+import org.thymeleaf.TemplateEngine
+import org.thymeleaf.context.Context
+import org.thymeleaf.templateresolver.FileTemplateResolver
 
-import java.awt.BasicStroke
-import java.awt.Color
-import java.awt.Font
+import java.awt.*
 import java.text.FieldPosition
 import java.text.Format
 import java.text.ParsePosition
@@ -62,7 +48,7 @@ outputPath.mkdirs()
 
 MongoUtils.connect {
 	mongo ->
-		def result =  mongo.live.command([
+		def result = mongo.live.command([
 				aggregate: "ranked_games",
 				pipeline: [
 //						[
@@ -173,7 +159,7 @@ MongoUtils.connect {
 					left + right
 			}
 			def percentageHistogram = countHistogram.collect {
-				it/total
+				it / total
 			}
 			generateHistogramSvg(percentageHistogram, new File(outputPath, "${champion.name()}_damage_histogram_5k.svg"), 1)
 			generateHistogramSvg(percentageHistogram, new File(outputPath, "${champion.name()}_damage_histogram_10k.svg"), 0.5)
@@ -201,17 +187,17 @@ MongoUtils.connect {
 def generateHistogramSvg(percentages, destination, width) {
 	def histogramCount = new DataTable(Double)
 	def values = percentages
-	values.collate(1/width as int).each {
+	values.collate(1 / width as int).each {
 		histogramCount.add(Math.min(it.sum() as double, 0.3000001))
 	}
 
-	def histogram = new EnumeratedData(histogramCount, 2500/width, 5000/width)
+	def histogram = new EnumeratedData(histogramCount, 2500 / width, 5000 / width)
 
 	def plot = new BarPlot(histogram)
 
 // Format plot
-	plot.insets = new Insets2D.Double(0, 2, 5, -15*width)
-	plot.barWidth = 4750/width
+	plot.insets = new Insets2D.Double(0, 2, 5, -15 * width)
+	plot.barWidth = 4750 / width
 
 	plot.plotArea.borderColor = Color.WHITE
 	plot.plotArea.majorGridY = false
@@ -222,7 +208,7 @@ def generateHistogramSvg(percentages, destination, width) {
 	plot.getAxisRenderer(BarPlot.AXIS_X).shapeStroke = new BasicStroke(0.2)
 	plot.getAxisRenderer(BarPlot.AXIS_X).tickStroke = new BasicStroke(0)
 	plot.getAxisRenderer(BarPlot.AXIS_X).tickFont = new Font("Helvetica Neue", Font.PLAIN, 3)
-	plot.getAxisRenderer(BarPlot.AXIS_X).tickSpacing = 5000/width
+	plot.getAxisRenderer(BarPlot.AXIS_X).tickSpacing = 5000 / width
 	plot.getAxisRenderer(BarPlot.AXIS_X).tickLabelDistance = 0.1
 	plot.getAxisRenderer(BarPlot.AXIS_X).tickLabelFormat = new Format() {
 		@Override

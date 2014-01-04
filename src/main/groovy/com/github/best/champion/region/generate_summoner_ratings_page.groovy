@@ -1,19 +1,10 @@
-@Grapes([
-	@Grab("org.thymeleaf:thymeleaf:2.1.2.RELEASE"),
-	@Grab("org.slf4j:slf4j-simple:1.7.5"),
-	@Grab("org.mongodb:mongo-java-driver:2.11.3"),
-	@Grab("com.github.concept-not-found:mongo-groovy-extension:1-SNAPSHOT"),
-	@Grab("com.github.pyrolistical:best-champion-region-services:1-SNAPSHOT")
-])
-
-import com.mongodb.*
-import com.github.best.champion.region.service.*
-
-import org.thymeleaf.*
-import org.thymeleaf.context.*
-import org.thymeleaf.templateresolver.*
+package com.github.best.champion.region
 
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
+import com.mongodb.BasicDBObject
+import org.thymeleaf.TemplateEngine
+import org.thymeleaf.context.Context
+import org.thymeleaf.templateresolver.FileTemplateResolver
 
 def start = System.currentTimeMillis()
 
@@ -47,9 +38,9 @@ Champion.each {
 		def model = context.variables
 
 		model["active"] = [
-			champion: champion,
-			region: region,
-			season: season
+				champion: champion,
+				region: region,
+				season: season
 		]
 
 		model["champions"] = Champion.values()
@@ -98,6 +89,6 @@ Champion.each {
 				new File(outputPath, "index.html").withWriter {
 					templateEngine.process("index", context, it)
 				}
-				println("templated ${champion.label} ${(System.currentTimeMillis() - start)/1000d}")
+				println("templated ${champion.label} ${(System.currentTimeMillis() - start) / 1000d}")
 		}
 }

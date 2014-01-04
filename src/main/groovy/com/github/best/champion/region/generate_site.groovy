@@ -1,12 +1,9 @@
-@Grapes([
-	@Grab("commons-io:commons-io:2.4"),
-	@Grab("com.github.pyrolistical:best-champion-region-services:1-SNAPSHOT")
-])
+package com.github.best.champion.region
 
-import org.apache.commons.io.*
+import org.apache.commons.io.FileUtils
 
-def templateDirectory = "/Users/rchen/dev/projects/github.com/concept-not-found/bestchampionregion/template"
-def outputDirectory = "/Users/rchen/dev/projects/github.com/concept-not-found/bestchampionregion-pages"
+def templateDirectory = "../../concept-not-found/bestchampionregion/template"
+def outputDirectory = "../../concept-not-found/bestchampionregion-pages"
 
 def tasks = args
 
@@ -57,37 +54,29 @@ def statics(templateDirectory, outputDirectory) {
 			"index.html"
 	].each {
 		FileUtils.copyFile(
-			new File(templateDirectory, it),
-			new File(outputDirectory, it))
+				new File(templateDirectory, it),
+				new File(outputDirectory, it))
 	}
 }
 
+def run(scriptName, String... args) {
+	def script = Class.forName("com.github.best.champion.region.$scriptName").newInstance()
+	script.binding = new Binding(args)
+	script.run()
+}
+
 def about(templateDirectory, outputDirectory) {
-	run(new File("generate-about-page.groovy"), [
-			templateDirectory,
-			outputDirectory
-	] as String[])
+	run("generate_about_page", templateDirectory, outputDirectory)
 }
 
 def summoner_ratings(templateDirectory, outputDirectory) {
-	def classloader = new GroovyClassLoader()
-	def shell = new GroovyShell(classloader, getBinding())
-	shell.run(new File("generate_summoner_ratings_page.groovy"), [
-			templateDirectory,
-			outputDirectory
-	] as String[])
+	run("generate_summoner_ratings_page", templateDirectory, outputDirectory)
 }
 
 def top_summoner(templateDirectory, outputDirectory) {
-	run(new File("generate_top_summoner_page.groovy"), [
-			templateDirectory,
-			outputDirectory
-	] as String[])
+	run("generate_top_summoner_page", templateDirectory, outputDirectory)
 }
 
 def top_champion(templateDirectory, outputDirectory) {
-	run(new File("generate_top_champion_page.groovy"), [
-			templateDirectory,
-			outputDirectory
-	] as String[])
+	run("generate_top_champion_page", templateDirectory, outputDirectory)
 }

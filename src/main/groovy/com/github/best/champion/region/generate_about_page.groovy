@@ -1,19 +1,9 @@
-@Grapes([
-	@Grab("org.thymeleaf:thymeleaf:2.1.2.RELEASE"),
-	@Grab("org.slf4j:slf4j-simple:1.7.5"),
-	@Grab("com.github.concept-not-found:mongo-groovy-extension:1-SNAPSHOT"),
-	@Grab("org.mongodb:mongo-java-driver:2.11.3"),
-	@Grab("com.github.pyrolistical:best-champion-region-services:1-SNAPSHOT")
-])
-
-import com.mongodb.*
-import org.thymeleaf.*
-import org.thymeleaf.context.*
-import org.thymeleaf.templateresolver.*
+package com.github.best.champion.region
 
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
-
-import com.github.best.champion.region.service.*
+import org.thymeleaf.TemplateEngine
+import org.thymeleaf.context.Context
+import org.thymeleaf.templateresolver.FileTemplateResolver
 
 def templateDirectory = args[0]
 if (!templateDirectory) {
