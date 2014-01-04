@@ -29,12 +29,7 @@ def class SummonerService {
 		def missing = summonerIds - existing
 
 		if (!missing.empty) {
-			def missingNames = getNames(missing)
-			def missingLeagues = getLeagues(missing)
-
-			missing.each {
-				updateSummoner(it, missingNames[it], missingLeagues[it])
-			}
+			getNameAndLeague(missing)
 		}
 
 		summonerCollection.find([_id: ['$in': summonerIds]] as BasicDBObject).each {
@@ -50,8 +45,20 @@ def class SummonerService {
 		summoners
 	}
 
+	def getNameAndLeague(summonerIds) {
+		def missingNames = getNames(summonerIds)
+		def missingLeagues = getLeagues(summonerIds)
+
+		summonerIds.each {
+			updateSummoner(it, missingNames[it], missingLeagues[it])
+		}
+	}
+
 	def getNames(summonerIds) {
 		def result = [:]
+		def start = System.currentTimeMillis()
+		def done = 0
+		def total = summonerIds.size()
 		summonerIds.collate(40).each {
 			summonerIdsChunk ->
 				try {
@@ -62,7 +69,18 @@ def class SummonerService {
 					response.data.summoners.each {
 						result[it.id] = it.name
 					}
-					println("fetch ${summonerIdsChunk.size()} summoner names")
+
+					def previousPercentage = 100 * done / total as int
+					done += 40
+					def currentPercentage = 100 * done / total as int
+					if (previousPercentage != currentPercentage && currentPercentage % 5 == 0) {
+						def timeRemaining = (System.currentTimeMillis() - start) * (total - done) / done as int
+						def hours = timeRemaining / (1000 * 60 * 60) as int
+						def minutes = (timeRemaining / (1000 * 60) as int) % 60
+						def seconds = (timeRemaining / 1000 as int) % 60
+						def duration = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+						println("names: done $currentPercentage% $done/$total - remaining $duration")
+					}
 				} catch (HttpResponseException e) {
 					throw new Exception("failed to resolve names for $summonerIdsChunk", e)
 				}
@@ -72,8 +90,23 @@ def class SummonerService {
 
 	def getLeagues(summonerIds) {
 		def result = [:]
+		def start = System.currentTimeMillis()
+		def done = 0
+		def total = summonerIds.size()
 		summonerIds.each {
 			result[it] = getLeague(it)
+
+			def previousPercentage = 100 * done / total as int
+			done++
+			def currentPercentage = 100 * done / total as int
+			if (previousPercentage != currentPercentage && currentPercentage % 5 == 0) {
+				def timeRemaining = (System.currentTimeMillis() - start) * (total - done) / done as int
+				def hours = timeRemaining / (1000 * 60 * 60) as int
+				def minutes = (timeRemaining / (1000 * 60) as int) % 60
+				def seconds = (timeRemaining / 1000 as int) % 60
+				def duration = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+				println("leagues: done $currentPercentage% $done/$total - remaining $duration")
+			}
 		}
 		result
 	}
@@ -97,11 +130,13 @@ def class SummonerService {
 
 			// default to V because can't fetch rank for some summoners due to ranked decay
 			def rank = "V"
+			def leaguePoints = 0
 			def entry = json."$summonerId".entries.find {
 				it.playerOrTeamId == summonerId as String
 			}
 			if (entry != null) {
 				rank = entry.rank
+				leaguePoints = entry.leaguePoints
 			}
 
 			def league = Constants.leagues.find {
@@ -114,10 +149,7 @@ def class SummonerService {
 				it.value.name.equalsIgnoreCase(name)
 			}
 
-			if (!cached) {
-				println("$summonerId is ${league.value.name}")
-			}
-			return league.key
+			return [league.key, leaguePoints]
 		} catch (HttpResponseException e) {
 			throw new Exception("failed to get league for $summonerId", e)
 		}
@@ -129,7 +161,8 @@ def class SummonerService {
 						'$set': [
 								name: name,
 								"name-last-retrieved": System.currentTimeMillis(),
-								league: league
+								league: league[0],
+								leaguePoints: league[1]
 						]
 				]
 		]
