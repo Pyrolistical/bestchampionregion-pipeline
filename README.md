@@ -15,6 +15,7 @@ Tools
 Projects
 --------
 
+* [https://github.com/Pyrolistical/bestchampionregion](https://github.com/Pyrolistical/bestchampionregion)
 * [https://github.com/concept-not-found/regulache](https://github.com/concept-not-found/regulache)
 * [https://github.com/concept-not-found/http-regulator](https://github.com/concept-not-found/http-regulator)
 * [https://github.com/concept-not-found/mongo-groovy-extension](https://github.com/concept-not-found/mongo-groovy-extension)
