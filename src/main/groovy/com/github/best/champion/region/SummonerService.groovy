@@ -125,7 +125,7 @@ def class SummonerService {
 
 			if (json == null || json."$summonerId" == null) {
 				println("could not find league for $summonerId, defaulting to Bronze IV")
-				return "bronze-5"
+				return [League.BRONZE_5, 0]
 			}
 
 			def tier = json."$summonerId".tier
