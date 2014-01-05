@@ -18,11 +18,16 @@ MongoUtils.connect {
 
 		def done = [] as Set
 		def bonus = [] as Set
+		def saved = 0
 		def total = summonerIds.size()
 		def start = System.currentTimeMillis()
 		def summonerService = new SummonerService(mongo)
 		summonerIds.each {
 			summonerId ->
+				if (done.contains(summonerId)) {
+					saved++
+					return
+				}
 				def (json, cached) = regulache.executeGet(
 						path: "api/lol/{region}/v2.2/league/by-summoner/{summonerId}",
 						"path-parameters": [
@@ -58,7 +63,7 @@ MongoUtils.connect {
 					def minutes = (timeRemaining / (1000 * 60) as int) % 60
 					def seconds = (timeRemaining / 1000 as int) % 60
 					def duration = String.format("%02d:%02d:%02d", hours, minutes, seconds)
-					println("done $currentPercentage% ${done.size()}/$total - remaining $duration")
+					println("done $currentPercentage% ${done.size()}/$total - remaining $duration saved thus far $saved")
 				}
 		}
 		def bonusPercentage = 100 * bonus.size()/done.size() as int
