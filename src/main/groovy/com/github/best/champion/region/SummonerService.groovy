@@ -33,10 +33,7 @@ def class SummonerService {
 		}
 
 		summonerCollection.find([_id: ['$in': summonerIds]] as BasicDBObject).each {
-			def league = Constants.leagues.find {
-				league ->
-					league.key == it.league
-			}
+			def league = League.getLeagueByPath(it.league)
 			summoners[it._id] = [
 					name: it.name,
 					league: league
