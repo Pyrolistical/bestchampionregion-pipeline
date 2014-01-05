@@ -36,8 +36,23 @@ MongoUtils.connect {
 				.waitFor()
 
 		def pathParameterSummonerIdQuery = '{"path-parameters.summonerId": {$in: ' + JsonOutput.toJson(summonerIds as String[]) + '}}'
-		["league_by_summoner_2p2", "recent_games_by_summoner_1p2", "ranked_stats_by_summoner_1p2"].each {
-			collection ->
+		[
+				"league_by_summoner_2p2": "api/lol/{region}/v2.2/league/by-summoner/{summonerId}",
+				"recent_games_by_summoner_1p2": "api/lol/{region}/v1.2/game/by-summoner/{summonerId}/recent",
+				"ranked_stats_by_summoner_1p2": "api/lol/{region}/v1.2/stats/by-summoner/{summonerId}/ranked"
+		].each {
+			collection, api ->
+				def query = [
+						headers: [:],
+						base: "http://localhost:30080/",
+						path: api,
+						"path-parameters": ['$in': summonerIds.collect {
+							[
+									region: "na",
+									summonerId: it as String
+							]
+						}]
+				]
 				new ProcessBuilder(
 						"mongodump",
 						"-v",
@@ -46,7 +61,7 @@ MongoUtils.connect {
 						"--collection",
 						collection,
 						"--query",
-						pathParameterSummonerIdQuery
+						JsonOutput.toJson(query)
 				)
 						.directory(new File(outputDirectory))
 						.inheritIO()
