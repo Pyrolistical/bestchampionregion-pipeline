@@ -9,7 +9,7 @@ MongoUtils.connect {
 	mongo ->
 		def regulache = new Regulache("http://localhost:30080/", mongo.live.league_by_summoner_2p2)
 		def summonerIds = mongo.live.ranked_summoners.find([
-				leaguePoints: ['$exists': false]
+				active: ['$exists': false],
 		] as BasicDBObject, [
 				_id: 1
 		] as BasicDBObject).limit(100_000).collect {
@@ -37,6 +37,7 @@ MongoUtils.connect {
 				)
 
 				if (json == null || json."$summonerId" == null) {
+					summonerService.inactiveSummoner(summonerId)
 					done.add(summonerId)
 					return
 				}
@@ -54,6 +55,11 @@ MongoUtils.connect {
 						} else {
 							bonus.add(foundSummonerId)
 						}
+				}
+				if (!done.contains(summonerId)) {
+					summonerService.inactiveSummoner(summonerId)
+					done.add(summonerId)
+					return
 				}
 
 				def currentPercentage = 100 * done.size() / total as int

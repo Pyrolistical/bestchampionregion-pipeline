@@ -149,10 +149,28 @@ def class SummonerService {
 		}
 	}
 
+	def inactiveSummoner(summonerId) {
+		def entry = [
+				[
+						'$set': [
+								active: false,
+								"league-last-retrieved": System.currentTimeMillis()
+						]
+				]
+		]
+		summonerCollection.update(
+				[_id: summonerId] as BasicDBObject,
+				entry as BasicDBObject,
+				true,
+				false
+		)
+	}
+
 	def updateSummoner(summonerId, name, league, leaguePoints) {
 		def entry = [
 				[
 						'$set': [
+								active: true,
 								name: name,
 								"name-last-retrieved": System.currentTimeMillis(),
 								league: league.path,
