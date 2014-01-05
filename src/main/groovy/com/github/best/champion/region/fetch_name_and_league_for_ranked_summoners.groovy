@@ -52,7 +52,7 @@ MongoUtils.connect {
 				}
 
 				def currentPercentage = 100 * done.size() / total as int
-				if (previousPercentage != currentPercentage && currentPercentage % 5 == 0) {
+				if (previousPercentage != currentPercentage && currentPercentage % 1 == 0) {
 					def timeRemaining = (System.currentTimeMillis() - start) * (total - done.size()) / done.size() as int
 					def hours = timeRemaining / (1000 * 60 * 60) as int
 					def minutes = (timeRemaining / (1000 * 60) as int) % 60

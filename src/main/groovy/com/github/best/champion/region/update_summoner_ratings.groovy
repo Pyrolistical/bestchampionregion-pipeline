@@ -24,8 +24,9 @@ MongoUtils.connect {
 		def done = 0
 
 		def lastRun = mongo.live.process.findOne([
-				name: "update summoner ratings"
-		] as BasicDBObject)."last-run"
+			name: "update summoner ratings"
+		] as BasicDBObject)
+		lastRun = lastRun == null ? 0 : lastRun."last-run"
 
 		def total = ranked_stats.count([
 				data: ['$ne': null],
