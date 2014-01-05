@@ -10,6 +10,7 @@ Tools
 * Groovy 2.2.1+ `brew install groovy`
 * Maven 3.0.5+ `brew install maven`
 * Mongo 2.4.8+ `brew install mongo`
+* 7zip `brew install p7zip`
 * [IntelliJ IDEA 13+ CE](http://www.jetbrains.com/idea/)
 * [Brackets](http://brackets.io/)
 
@@ -45,7 +46,9 @@ Generating the Site
 
 All projects are Maven.  Run `mvn clean install` on each one.  Each Maven project can be import a modules in the same IntelliJ project.
 
-Load data (get latest dump from production) into Mongo using `mongorestore --db live`
+Download [development dump](https://www.dropbox.com/sh/vfin51td8flytg9/RMVDIynDdP)
+
+Load data with the command `mvn exec:java -Dexec.mainClass=com.github.best.champion.region.import_development_dump -Dexec.arguments=dump-1388892960491.7z`
 
 Regenerate site from `~/projects/github.com/pyrolistical/bestchampionregion` with command `mvn exec:java -Dexec.mainClass=com.github.best.champion.region.generate_site`
 
