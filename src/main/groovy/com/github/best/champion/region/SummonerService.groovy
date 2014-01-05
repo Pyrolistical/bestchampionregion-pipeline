@@ -50,7 +50,9 @@ def class SummonerService {
 		def missingLeagues = getLeagues(summonerIds)
 
 		summonerIds.each {
-			updateSummoner(it, missingNames[it], missingLeagues[it])
+			def league = missingLeagues[it][0]
+			def leaguePoints = missingLeagues[it][1]
+			updateSummoner(it, missingNames[it], league, leaguePoints)
 		}
 	}
 
@@ -139,30 +141,23 @@ def class SummonerService {
 				leaguePoints = entry.leaguePoints
 			}
 
-			def league = Constants.leagues.find {
-				def name
-				if (it.key == "challenger") {
-					name = tier
-				} else {
-					name = "$tier $rank"
-				}
-				it.value.name.equalsIgnoreCase(name)
-			}
+			def league = League.getLeague(tier, rank)
 
-			return [league.key, leaguePoints]
+			return [league, leaguePoints]
 		} catch (HttpResponseException e) {
 			throw new Exception("failed to get league for $summonerId", e)
 		}
 	}
 
-	def updateSummoner(summonerId, name, league) {
+	def updateSummoner(summonerId, name, league, leaguePoints) {
 		def entry = [
 				[
 						'$set': [
 								name: name,
 								"name-last-retrieved": System.currentTimeMillis(),
-								league: league[0],
-								leaguePoints: league[1]
+								league: league.path,
+								leaguePoints: leaguePoints,
+								"league-last-retrieved": System.currentTimeMillis()
 						]
 				]
 		]
