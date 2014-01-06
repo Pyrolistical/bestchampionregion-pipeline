@@ -1,4 +1,5 @@
+*.iml
 *.swp
 *.class
 target/
-
+.DS_Store
