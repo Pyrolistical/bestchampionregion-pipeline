@@ -25,6 +25,12 @@ MongoUtils.connect {
 				"page-last-generated": 1
 		] as BasicDBObject)
 
+		mongo.live.ranked_summoners.ensureIndex([
+				active: 1,
+				league: 1,
+				leaguePoints: 1
+		] as BasicDBObject)
+
 		def leagueCount = mongo.live.command([
 				aggregate: "ranked_summoners",
 				pipeline: [
@@ -77,11 +83,9 @@ MongoUtils.connect {
 						region: region,
 						season: season
 				]
-
 				def summoner = mongo.live.ranked_summoners.findOne([
 						_id: summonerId
 				] as BasicDBObject)
-
 				model.name = summoner.name
 				model.region = "NA"
 				model.league = League.getLeagueByPath(summoner.league)
@@ -107,7 +111,6 @@ MongoUtils.connect {
 						]
 				] as BasicDBObject)
 				rank++
-
 				model.rank = rank
 
 				def percentage = 100 * rank / totalRankedPlayers
@@ -119,7 +122,6 @@ MongoUtils.connect {
 				new File(outputPath, "index.html").withWriter {
 					templateEngine.process("index", context, it)
 				}
-
 				mongo.live.ranked_summoners.update(
 						[_id: summonerId] as BasicDBObject,
 						[
@@ -136,7 +138,7 @@ MongoUtils.connect {
 				def previousPercentage = 100 * done / total as int
 				done++
 				def currentPercentage = 100 * done / total as int
-				if (previousPercentage != currentPercentage && currentPercentage % 5 == 0) {
+				if (previousPercentage != currentPercentage && currentPercentage % 1 == 0) {
 					def timeRemaining = (System.currentTimeMillis() - start) * (total - done) / done as int
 					def hours = timeRemaining / (1000 * 60 * 60) as int
 					def minutes = (timeRemaining / (1000 * 60) as int) % 60
