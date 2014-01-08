@@ -126,7 +126,7 @@ def enum Champion {
 	def Champion(id, label) {
 		this.id = id
 		this.label = label
-		this.path = label.toLowerCase().replace("'", "-").replace(" ", "-")
+		this.path = label.toLowerCase().replace("'", "-").replace(" ", "-").replace(".", "")
 	}
 
 }
