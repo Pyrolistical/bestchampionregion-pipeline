@@ -57,8 +57,6 @@ MongoUtils.connect {
 		] as BasicDBObject)
 
 		def gamesPlayed = [:]
-		def graphData = [:]
-
 		mongo.live.command([
 				aggregate: "ranked_games",
 				pipeline: [
@@ -109,12 +107,10 @@ MongoUtils.connect {
 				]
 		] as BasicDBObject).result.each {
 			def gameDate = new Date(it._id.createDate)
-			if (!gamesPlayed.containsKey(gameDate)) {
-				gamesPlayed[gameDate] = 0
-			}
-			gamesPlayed[gameDate] += it.count
+			gamesPlayed[gameDate] = it.count
 		}
 
+		def graphData = [:]
 		mongo.live.command([
 				aggregate: "ranked_games",
 				pipeline: [
@@ -175,10 +171,7 @@ MongoUtils.connect {
 			if (!graphData.containsKey(championId)) {
 				graphData[championId] = [:]
 			}
-			if (!graphData[championId].containsKey(gameDate)) {
-				graphData[championId][gameDate] = 0
-			}
-			graphData[championId][gameDate] += it.count
+			graphData[championId][gameDate] = it.count
 		}
 
 		model.active = [
