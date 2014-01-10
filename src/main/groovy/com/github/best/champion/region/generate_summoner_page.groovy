@@ -116,8 +116,7 @@ MongoUtils.connect {
 				def percentage = 100 * rank / totalRankedPlayers
 				model.percentage = printSignificantFigures(percentage, 3)
 
-				def uriSafeName = URLEncoder.encode(model.name, "UTF-8")
-				def outputPath = new File(outputDirectory, "summoner/${region.value.path}/$uriSafeName")
+				def outputPath = new File(outputDirectory, "summoner/${region.value.path}/${model.name}")
 				outputPath.mkdirs()
 				new File(outputPath, "index.html").withWriter {
 					templateEngine.process("index", context, it)
