@@ -19,6 +19,7 @@ def all(templateDirectory, outputDirectory) {
 	clean(templateDirectory, outputDirectory)
 	statics(templateDirectory, outputDirectory)
 	about(templateDirectory, outputDirectory)
+	summoner_page(templateDirectory, outputDirectory)
 	summoner_ratings(templateDirectory, outputDirectory)
 	top_summoner(templateDirectory, outputDirectory)
 	top_champion(templateDirectory, outputDirectory)
@@ -67,6 +68,10 @@ def run(scriptName, String... args) {
 
 def about(templateDirectory, outputDirectory) {
 	run("generate_about_page", templateDirectory, outputDirectory)
+}
+
+def summoner_page(templateDirectory, outputDirectory) {
+	run("generate_summoner_page", templateDirectory, outputDirectory)
 }
 
 def summoner_ratings(templateDirectory, outputDirectory) {
