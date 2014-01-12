@@ -2,27 +2,18 @@ package com.github.best.champion.region
 
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 import com.mongodb.BasicDBObject
-import org.thymeleaf.TemplateEngine
-import org.thymeleaf.context.Context
-import org.thymeleaf.templateresolver.FileTemplateResolver
 
-def templateDirectory = "../../concept-not-found/bestchampionregion/template"
-
-def outputDirectory = "../../concept-not-found/bestchampionregion-pages"
+def outputDirectory = "../../concept-not-found/bestchampionregion-data"
 
 def region = Constants.regions.find {
 	it.key == "NA"
-}
-
-def season = Constants.seasons.find {
-	it.key == "season3"
 }
 
 MongoUtils.connect {
 	mongo ->
 		mongo.live.ranked_summoners.ensureIndex([
 				active: 1,
-				"page-last-generated": 1
+				"pipe-last-generated": 1
 		] as BasicDBObject)
 
 		mongo.live.ranked_summoners.ensureIndex([
@@ -49,6 +40,16 @@ MongoUtils.connect {
 						]
 				]
 		] as BasicDBObject).result
+		def rank = 0
+		def leagueRank = [:]
+		League.each {
+			league ->
+				leagueRank[league] = rank
+
+				rank += leagueCount.find {
+					it._id == league.path
+				}.count
+		}
 
 		def totalRankedPlayers = leagueCount.collect {
 			it.count
@@ -56,7 +57,7 @@ MongoUtils.connect {
 
 		def summonerIds = mongo.live.ranked_summoners.find([
 				active: true,
-				"page-last-generated": [
+				"pipe-last-generated": [
 						'$exists': false
 				]
 		] as BasicDBObject, [
@@ -70,63 +71,46 @@ MongoUtils.connect {
 		def start = System.currentTimeMillis()
 		summonerIds.each {
 			summonerId ->
-				def templateEngine = new TemplateEngine()
-				def fileTemplateResolver = new FileTemplateResolver()
-				fileTemplateResolver.setPrefix("$templateDirectory/summoner/region/name/")
-				fileTemplateResolver.setSuffix(".html")
-				templateEngine.setTemplateResolver(fileTemplateResolver)
 
-				def context = new Context()
-				def model = context.variables
-
-				model["active"] = [
-						region: region,
-						season: season
-				]
 				def summoner = mongo.live.ranked_summoners.findOne([
 						_id: summonerId
 				] as BasicDBObject)
-				model.name = summoner.name
-				model.region = "NA"
-				model.league = League.getLeagueByPath(summoner.league)
-				model.leaguePoints = summoner.leaguePoints
+				def name = summoner.name
+				def league = League.getLeagueByPath(summoner.league)
+				def leaguePoints = summoner.leaguePoints
 
-				def rank = 0
-				League.any {
-					league ->
-						if (model.league == league) {
-							return true
-						}
-
-						rank += leagueCount.find {
-							it._id == league.path
-						}.count
-						false
-				}
+				rank = leagueRank[league]
 				rank += mongo.live.ranked_summoners.count([
 						active: true,
-						league: model.league.path,
+						league: league.path,
 						leaguePoints: [
-								'$gt': model.leaguePoints
+								'$gt': leaguePoints
 						]
 				] as BasicDBObject)
 				rank++
-				model.rank = rank
 
 				def percentage = 100 * rank / totalRankedPlayers
-				model.percentage = printSignificantFigures(percentage, 3)
+				percentage = printSignificantFigures(percentage, 3)
 
-				def outputPath = new File(outputDirectory, "summoner/${region.value.path}/${model.name}")
+				def outputPath = new File(outputDirectory, "summoner/${region.value.path}")
 				outputPath.mkdirs()
-				new File(outputPath, "index.html").withWriter {
-					templateEngine.process("index", context, it)
+				new File(outputPath, "${name}.pipe").withWriter {
+					it << rank
+					it << "\n"
+					it << percentage
+					it << "\n"
+					it << league.code
+					it << "\n"
+					it << leaguePoints
+					it << "\n"
 				}
+
 				mongo.live.ranked_summoners.update(
 						[_id: summonerId] as BasicDBObject,
 						[
 								[
 										'$set': [
-												"page-last-generated": System.currentTimeMillis()
+												"pipe-last-generated": System.currentTimeMillis()
 										]
 								]
 						] as BasicDBObject,

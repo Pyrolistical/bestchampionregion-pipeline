@@ -30,10 +30,17 @@ def enum League {
 
 	def label
 	def path
+	def code
 
 	def League(label) {
 		this.label = label
-		this.path = name().toLowerCase().replace("_", "-")
+		def name = name().toLowerCase()
+		this.path = name.toLowerCase().replace("_", "-")
+		this.code = name[0]
+		def division = name[name.length() - 1]
+		if (division.isInteger()) {
+			this.code += division
+		}
 	}
 
 	def static League getLeague(tier, rank) {
