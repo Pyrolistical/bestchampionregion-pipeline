@@ -62,7 +62,7 @@ MongoUtils.connect {
 				]
 		] as BasicDBObject, [
 				_id: 1
-		] as BasicDBObject).limit(100_000).collect {
+		] as BasicDBObject).limit(500_000).collect {
 			it._id
 		}
 
