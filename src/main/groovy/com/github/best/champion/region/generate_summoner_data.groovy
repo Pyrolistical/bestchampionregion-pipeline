@@ -1,5 +1,4 @@
 package com.github.best.champion.region
-
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 import com.mongodb.BasicDBObject
 
@@ -92,6 +91,8 @@ MongoUtils.connect {
 				def percentage = 100 * rank / totalRankedPlayers
 				percentage = printSignificantFigures(percentage, 3)
 
+				def pipeLastGenerated = System.currentTimeMillis()
+
 				def outputPath = new File(outputDirectory, "summoner/${region.value.path}")
 				outputPath.mkdirs()
 				new File(outputPath, "${name}.pipe").withWriter {
@@ -103,6 +104,8 @@ MongoUtils.connect {
 					it << "\n"
 					it << leaguePoints
 					it << "\n"
+					it << pipeLastGenerated
+					it << "\n"
 				}
 
 				mongo.live.ranked_summoners.update(
@@ -110,7 +113,7 @@ MongoUtils.connect {
 						[
 								[
 										'$set': [
-												"pipe-last-generated": System.currentTimeMillis()
+												"pipe-last-generated": pipeLastGenerated
 										]
 								]
 						] as BasicDBObject,
