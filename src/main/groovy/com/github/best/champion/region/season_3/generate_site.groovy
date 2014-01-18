@@ -1,4 +1,4 @@
-package com.github.best.champion.region
+package com.github.best.champion.region.season_3
 
 import org.apache.commons.io.FileUtils
 

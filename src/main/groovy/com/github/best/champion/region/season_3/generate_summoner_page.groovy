@@ -1,5 +1,6 @@
-package com.github.best.champion.region
+package com.github.best.champion.region.season_3
 
+import com.github.best.champion.region.Constants
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 import org.thymeleaf.TemplateEngine
 import org.thymeleaf.context.Context
@@ -17,7 +18,7 @@ if (!outputDirectory) {
 
 def templateEngine = new TemplateEngine()
 def fileTemplateResolver = new FileTemplateResolver()
-fileTemplateResolver.setPrefix("$templateDirectory/about/")
+fileTemplateResolver.setPrefix("$templateDirectory/summoner/region/")
 fileTemplateResolver.setSuffix(".html")
 templateEngine.setTemplateResolver(fileTemplateResolver)
 
@@ -27,7 +28,6 @@ def model = context.variables
 def region = Constants.regions.find {
 	it.key == "NA"
 }
-
 def season = Constants.seasons.find {
 	it.key == "season3"
 }
@@ -42,7 +42,7 @@ MongoUtils.connect {
 		model.numberOfSummoners = mongo.season_3.ranked_summoners.count()
 		model.numberOfGames = mongo.season_3.ranked_games.count()
 
-		def outputPath = new File(outputDirectory, "about")
+		def outputPath = new File(outputDirectory, "summoner/${region.value.path}")
 		outputPath.mkdirs()
 		new File(outputPath, "index.html").withWriter {
 			templateEngine.process("index", context, it)

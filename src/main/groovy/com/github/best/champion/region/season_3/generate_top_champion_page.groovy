@@ -1,5 +1,7 @@
-package com.github.best.champion.region
+package com.github.best.champion.region.season_3
 
+import com.github.best.champion.region.Champion
+import com.github.best.champion.region.Constants
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 import com.mongodb.BasicDBObject
 import de.erichseifert.gral.data.DataTable

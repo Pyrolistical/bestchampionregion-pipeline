@@ -1,10 +1,14 @@
-package com.github.best.champion.region
+package com.github.best.champion.region.season_3
 
+import com.github.best.champion.region.Champion
+import com.github.best.champion.region.Constants
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 import com.mongodb.BasicDBObject
 import org.thymeleaf.TemplateEngine
 import org.thymeleaf.context.Context
 import org.thymeleaf.templateresolver.FileTemplateResolver
+
+def start = System.currentTimeMillis()
 
 def templateDirectory = args[0]
 if (!templateDirectory) {
@@ -26,47 +30,47 @@ def season = Constants.seasons.find {
 
 def templateEngine = new TemplateEngine()
 def fileTemplateResolver = new FileTemplateResolver()
-fileTemplateResolver.setPrefix("$templateDirectory/top/summoner/region/season/")
+fileTemplateResolver.setPrefix("$templateDirectory/best/champion/region/season/")
 fileTemplateResolver.setSuffix(".html")
 templateEngine.setTemplateResolver(fileTemplateResolver)
 
-def context = new Context()
-def model = context.variables
+Champion.each {
+	champion ->
+		def context = new Context()
+		def model = context.variables
 
-MongoUtils.connect {
-	mongo ->
-		def summonerService = new SummonerService(mongo)
-		model["data"] = []
-		Champion.each {
-			champion ->
+		model["active"] = [
+				champion: champion,
+				region: region,
+				season: season
+		]
+
+		model["champions"] = Champion.values()
+
+		MongoUtils.connect {
+			mongo ->
+				def summonerService = new SummonerService(mongo)
 				def summoner_ratings = mongo.season_3.summoner_ratings
 
-				model.active = [
-						region: region,
-						season: season
-				]
-
-				def data = [
-						champion: champion,
-				]
-				def table = []
+				def data = []
 
 				def ratingOrder = -1
-				summoner_ratings.find([
+				def resultSet = summoner_ratings.find([
 						champion: champion.name()
-				] as BasicDBObject).sort([rating: ratingOrder] as BasicDBObject).limit(5).eachWithIndex {
+				] as BasicDBObject).sort([rating: ratingOrder] as BasicDBObject).limit(100)
+				resultSet.eachWithIndex {
 					row, i ->
 						def datum = new HashMap(row)
 						datum["rank"] = i + 1
-						table.add(datum)
+						data.add(datum)
 				}
 
-				def summonerIds = table.collect {
+				def summonerIds = data.collect {
 					it.summonerId
 				}
 				def summoners = summonerService.getSummonersByIds(summonerIds)
 
-				table.each {
+				data.each {
 					def summonerId = it.summonerId
 					if (summoners[summonerId] == null) {
 						throw new IllegalStateException("missing summoner name and league for $summonerId")
@@ -75,16 +79,18 @@ MongoUtils.connect {
 					it.league = summoners[summonerId].league
 				}
 
-				data.table = table.collect {
-					it.subMap(["rank", "league", "name", "rating"])
+				model["data"] = data.collect {
+					it.subMap(["rank", "league", "name", "won", "lost", "rating"])
 				}
 
-				model.data.add(data)
-		}
-		def outputPath = new File(outputDirectory, "top/summoner/${region.value.path}/${season.value.path}")
-		outputPath.mkdirs()
-		new File(outputPath, "index.html").withWriter {
-			templateEngine.process("index", context, it)
+				def championPath = champion.path
+				def regionPath = region.value.path
+				def seasonPath = season.value.path
+				def outputPath = new File(outputDirectory, "best/$championPath/$regionPath/$seasonPath")
+				outputPath.mkdirs()
+				new File(outputPath, "index.html").withWriter {
+					templateEngine.process("index", context, it)
+				}
+				println("templated ${champion.label} ${(System.currentTimeMillis() - start) / 1000d}")
 		}
 }
-

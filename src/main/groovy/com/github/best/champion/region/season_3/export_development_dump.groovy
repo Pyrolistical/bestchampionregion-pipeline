@@ -1,14 +1,12 @@
-package com.github.best.champion.region
+package com.github.best.champion.region.season_3
 
+import com.github.best.champion.region.League
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 import com.mongodb.BasicDBObject
 import groovy.json.JsonOutput
 
-if (args.length < 1) {
-	throw new Exception("database parameter required")
-}
-def database = args[0]
-def outputDirectory = args.length >= 2 ? args[1] : "."
+def outputDirectory = args.length >= 1 ? args[0] : "."
+def database = "season_3"
 
 MongoUtils.connect {
 	mongo ->
@@ -39,7 +37,6 @@ MongoUtils.connect {
 				.start()
 				.waitFor()
 
-		def pathParameterSummonerIdQuery = '{"path-parameters.summonerId": {$in: ' + JsonOutput.toJson(summonerIds as String[]) + '}}'
 		[
 				"league_by_summoner_2p2": "api/lol/{region}/v2.2/league/by-summoner/{summonerId}",
 				"recent_games_by_summoner_1p2": "api/lol/{region}/v1.2/game/by-summoner/{summonerId}/recent",

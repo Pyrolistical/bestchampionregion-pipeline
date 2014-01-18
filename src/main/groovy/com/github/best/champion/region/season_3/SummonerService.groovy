@@ -1,5 +1,6 @@
-package com.github.best.champion.region
+package com.github.best.champion.region.season_3
 
+import com.github.best.champion.region.League
 import com.mongodb.*
 import com.github.concept.not.found.regulache.Regulache
 import groovyx.net.http.*

@@ -1,43 +1,41 @@
-package com.github.best.champion.region
+package com.github.best.champion.region.season_3
 
+import com.github.best.champion.region.Champion
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 import com.github.concept.not.found.regulache.Regulache
 import com.mongodb.BasicDBObject
 import groovyx.net.http.HttpResponseException
 
+import java.util.concurrent.TimeUnit
+
 MongoUtils.connect {
 	mongo ->
-		def ranked_summoners = mongo.season_3.ranked_summoners
-		def recent_games = mongo.season_3.recent_games_by_summoner_1p2
+		def ranked_stats = mongo.season_3.ranked_stats_by_summoner_1p2
+		def summoner_ratings = mongo.season_3.summoner_ratings
 
-		def summonerIds = ranked_summoners.find(
-		).collect {
-			it._id
-		} as Set
-
-		def finishedSummonerIds = recent_games.find([
-				"data": [
-						'$ne': null
-				]
-		] as BasicDBObject, [
-				"data.summonerId": 1
-		] as BasicDBObject).collect {
-			it.data.summonerId
-		} as Set
-		summonerIds.removeAll(finishedSummonerIds)
-
-		def regulache = new Regulache("http://localhost:30080/", recent_games)
+		def summonerIds = [] as Set
+		Champion.each {
+			champion ->
+				def ratingOrder = -1
+				summoner_ratings.find([
+						champion: champion.name()
+				] as BasicDBObject, [
+						summonerId: 1
+				] as BasicDBObject).sort([rating: ratingOrder] as BasicDBObject).limit(150).each {
+					summonerIds.add(it.summonerId)
+				}
+		}
 		def done = 0
 		def total = summonerIds.size()
-
 		def start = System.currentTimeMillis()
+		def regulache = new Regulache("http://localhost:30080/", ranked_stats)
 		summonerIds.each {
 			summonerId ->
-				fetchRecentGames(regulache, summonerId)
+				refreshRankedStats(regulache, summonerId)
 				def previousPercentage = 100 * done / total as int
 				done++
 				def currentPercentage = 100 * done / total as int
-				if (previousPercentage != currentPercentage && currentPercentage % 1 == 0) {
+				if (previousPercentage != currentPercentage && currentPercentage % 5 == 0) {
 					def timeRemaining = (System.currentTimeMillis() - start) * (total - done) / done as int
 					def hours = timeRemaining / (1000 * 60 * 60) as int
 					def minutes = (timeRemaining / (1000 * 60) as int) % 60
@@ -48,18 +46,22 @@ MongoUtils.connect {
 		}
 }
 
-def fetchRecentGames(regulache, summonerId) {
+def refreshRankedStats(regulache, summonerId) {
 	try {
 		def (json, cached) = regulache.executeGet(
-				path: "api/lol/{region}/v1.2/game/by-summoner/{summonerId}/recent",
+				path: "api/lol/{region}/v1.2/stats/by-summoner/{summonerId}/ranked",
 				"path-parameters": [
 						region: "na",
 						summonerId: summonerId as String
-				]
+				],
+				queries: [
+						season: "SEASON3"
+				],
+				"ignore-cache-if-older-than": TimeUnit.DAYS.toMillis(1)
 		)
 		cached
 	} catch (HttpResponseException e) {
-		throw new Exception("failed to recent games for $summonerId", e)
+		throw new Exception("failed to fetch stats for $summonerId", e)
 	}
 }
 
