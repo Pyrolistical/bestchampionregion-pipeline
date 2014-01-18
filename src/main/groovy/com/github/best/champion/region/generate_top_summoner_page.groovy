@@ -39,7 +39,7 @@ MongoUtils.connect {
 		model["data"] = []
 		Champion.each {
 			champion ->
-				def summoner_ratings = mongo.live.summoner_ratings
+				def summoner_ratings = mongo.season_3.summoner_ratings
 
 				model.active = [
 						region: region,

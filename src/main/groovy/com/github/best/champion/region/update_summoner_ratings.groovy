@@ -5,9 +5,9 @@ import com.mongodb.BasicDBObject
 
 MongoUtils.connect {
 	mongo ->
-		def ranked_stats = mongo.live.ranked_stats_by_summoner_1p2
+		def ranked_stats = mongo.season_3.ranked_stats_by_summoner_1p2
 
-		def summoner_ratings = mongo.live.summoner_ratings
+		def summoner_ratings = mongo.season_3.summoner_ratings
 
 		summoner_ratings.ensureIndex([
 				champion: 1,
@@ -23,7 +23,7 @@ MongoUtils.connect {
 
 		def done = 0
 
-		def lastRun = mongo.live.process.findOne([
+		def lastRun = mongo.season_3.process.findOne([
 			name: "update summoner ratings"
 		] as BasicDBObject)
 		lastRun = lastRun == null ? 0 : lastRun."last-run"
@@ -80,7 +80,7 @@ MongoUtils.connect {
 					println("done $currentPercentage% $done/$total - remaining $duration")
 				}
 		}
-		mongo.live.process.update([
+		mongo.season_3.process.update([
 				name: "update summoner ratings"
 		] as BasicDBObject, [
 				name: "update summoner ratings",

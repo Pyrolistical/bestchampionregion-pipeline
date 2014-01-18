@@ -10,18 +10,18 @@ def region = Constants.regions.find {
 
 MongoUtils.connect {
 	mongo ->
-		mongo.live.ranked_summoners.ensureIndex([
+		mongo.season_3.ranked_summoners.ensureIndex([
 				active: 1,
 				"pipe-last-generated": 1
 		] as BasicDBObject)
 
-		mongo.live.ranked_summoners.ensureIndex([
+		mongo.season_3.ranked_summoners.ensureIndex([
 				active: 1,
 				league: 1,
 				leaguePoints: 1
 		] as BasicDBObject)
 
-		def leagueCount = mongo.live.command([
+		def leagueCount = mongo.season_3.command([
 				aggregate: "ranked_summoners",
 				pipeline: [
 						[
@@ -54,7 +54,7 @@ MongoUtils.connect {
 			it.count
 		}.sum()
 
-		def summonerIds = mongo.live.ranked_summoners.find([
+		def summonerIds = mongo.season_3.ranked_summoners.find([
 				active: true,
 				"pipe-last-generated": [
 						'$exists': false
@@ -71,7 +71,7 @@ MongoUtils.connect {
 		summonerIds.each {
 			summonerId ->
 
-				def summoner = mongo.live.ranked_summoners.findOne([
+				def summoner = mongo.season_3.ranked_summoners.findOne([
 						_id: summonerId
 				] as BasicDBObject)
 				def name = summoner.name
@@ -79,7 +79,7 @@ MongoUtils.connect {
 				def leaguePoints = summoner.leaguePoints
 
 				rank = leagueRank[league]
-				rank += mongo.live.ranked_summoners.count([
+				rank += mongo.season_3.ranked_summoners.count([
 						active: true,
 						league: league.path,
 						leaguePoints: [
@@ -108,7 +108,7 @@ MongoUtils.connect {
 					it << "\n"
 				}
 
-				mongo.live.ranked_summoners.update(
+				mongo.season_3.ranked_summoners.update(
 						[_id: summonerId] as BasicDBObject,
 						[
 								[

@@ -7,8 +7,8 @@ import groovyx.net.http.HttpResponseException
 
 MongoUtils.connect {
 	mongo ->
-		def ranked_summoners = mongo.live.ranked_summoners
-		def recent_games = mongo.live.recent_games_by_summoner_1p2
+		def ranked_summoners = mongo.season_3.ranked_summoners
+		def recent_games = mongo.season_3.recent_games_by_summoner_1p2
 
 		def summonerIds = ranked_summoners.find(
 		).collect {

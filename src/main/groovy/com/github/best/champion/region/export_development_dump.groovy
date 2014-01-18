@@ -4,14 +4,18 @@ import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 import com.mongodb.BasicDBObject
 import groovy.json.JsonOutput
 
-def outputDirectory = args.length >= 1 ? args[0] : "."
+if (args.length < 1) {
+	throw new Exception("database parameter required")
+}
+def database = args[0]
+def outputDirectory = args.length >= 2 ? args[1] : "."
 
 MongoUtils.connect {
 	mongo ->
 		def summonerIds = []
 		League.each {
 			league ->
-				mongo.live.ranked_summoners.find([
+				mongo."$database".ranked_summoners.find([
 						league: league.path
 				] as BasicDBObject, [
 						_id: 1
@@ -24,7 +28,7 @@ MongoUtils.connect {
 				"mongodump",
 				"-v",
 				"--db",
-				"live",
+				database,
 				"--collection",
 				"ranked_summoners",
 				"--query",
@@ -57,7 +61,7 @@ MongoUtils.connect {
 						"mongodump",
 						"-v",
 						"--db",
-						"live",
+						database,
 						"--collection",
 						collection,
 						"--query",

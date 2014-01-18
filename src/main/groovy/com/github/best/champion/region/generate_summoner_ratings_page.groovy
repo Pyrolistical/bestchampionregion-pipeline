@@ -48,7 +48,7 @@ Champion.each {
 		MongoUtils.connect {
 			mongo ->
 				def summonerService = new SummonerService(mongo)
-				def summoner_ratings = mongo.live.summoner_ratings
+				def summoner_ratings = mongo.season_3.summoner_ratings
 
 				def data = []
 

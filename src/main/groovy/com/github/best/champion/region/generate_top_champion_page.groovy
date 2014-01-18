@@ -48,7 +48,7 @@ outputPath.mkdirs()
 
 MongoUtils.connect {
 	mongo ->
-		def result = mongo.live.command([
+		def result = mongo.season_3.command([
 				aggregate: "ranked_games",
 				pipeline: [
 //						[

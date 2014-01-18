@@ -10,8 +10,8 @@ def rankedSubTypes = [
 
 MongoUtils.connect {
 	mongo ->
-		def recent_games = mongo.live.recent_games_by_summoner_1p2
-		def ranked_games = mongo.live.ranked_games
+		def recent_games = mongo.season_3.recent_games_by_summoner_1p2
+		def ranked_games = mongo.season_3.ranked_games
 
 		ranked_games.ensureIndex([
 				summonerId: 1,

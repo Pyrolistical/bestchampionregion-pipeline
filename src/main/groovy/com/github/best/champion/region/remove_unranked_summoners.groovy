@@ -5,12 +5,12 @@ import com.mongodb.BasicDBObject
 
 MongoUtils.connect {
 	mongo ->
-		def summoner_league = mongo.live.league_by_summoner_2p2
-		def ranked_summoners = mongo.live.ranked_summoners
-		def recent_games = mongo.live.recent_games_by_summoner_1p2
-		def ranked_games = mongo.live.ranked_games
-		def ranked_stats = mongo.live.ranked_stats_by_summoner_1p2
-		def summoner_ratings = mongo.live.summoner_ratings
+		def summoner_league = mongo.season_3.league_by_summoner_2p2
+		def ranked_summoners = mongo.season_3.ranked_summoners
+		def recent_games = mongo.season_3.recent_games_by_summoner_1p2
+		def ranked_games = mongo.season_3.ranked_games
+		def ranked_stats = mongo.season_3.ranked_stats_by_summoner_1p2
+		def summoner_ratings = mongo.season_3.summoner_ratings
 
 		summoner_ratings.ensureIndex([
 				summonerId: 1

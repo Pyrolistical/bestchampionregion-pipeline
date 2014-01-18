@@ -5,8 +5,8 @@ import com.mongodb.BasicDBObject
 
 MongoUtils.connect {
 	mongo ->
-		def ranked_games = mongo.live.ranked_games
-		def ranked_summoners = mongo.live.ranked_summoners
+		def ranked_games = mongo.season_3.ranked_games
+		def ranked_summoners = mongo.season_3.ranked_summoners
 
 		def done = 0
 		def total = ranked_games.count()

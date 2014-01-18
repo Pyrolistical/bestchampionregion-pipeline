@@ -52,12 +52,12 @@ def minLimit = new Date(yesterday.time - TimeUnit.DAYS.toMillis(14))
 
 MongoUtils.connect {
 	mongo ->
-		mongo.live.ranked_games.ensureIndex([
+		mongo.season_3.ranked_games.ensureIndex([
 				createDate: 1
 		] as BasicDBObject)
 
 		def gamesPlayed = [:]
-		mongo.live.command([
+		mongo.season_3.command([
 				aggregate: "ranked_games",
 				pipeline: [
 						// Match to restrict games to a x time view
@@ -111,7 +111,7 @@ MongoUtils.connect {
 		}
 
 		def graphData = [:]
-		mongo.live.command([
+		mongo.season_3.command([
 				aggregate: "ranked_games",
 				pipeline: [
 						// Match to restrict games to a x time view

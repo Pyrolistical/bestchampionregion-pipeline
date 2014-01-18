@@ -6,7 +6,7 @@ import com.mongodb.BasicDBObject
 MongoUtils.connect {
 	mongo ->
 
-		def existingSummonerIds = mongo.live.league_by_summoner_2p2.find([
+		def existingSummonerIds = mongo.season_3.league_by_summoner_2p2.find([
 				data: ['$ne': null]
 		] as BasicDBObject, [
 				"path-parameters.summonerId": 1
@@ -25,7 +25,7 @@ MongoUtils.connect {
 				query[summonerIdPath] = ['$exists': true]
 				def projection = [:]
 				projection[summonerIdPath] = 1
-				mongo.live.league_by_summoner_2p2.find(
+				mongo.season_3.league_by_summoner_2p2.find(
 						query as BasicDBObject,
 						projection as BasicDBObject).each {
 					league_by_summoner ->

@@ -38,8 +38,8 @@ MongoUtils.connect {
 				region: region,
 				season: season
 		]
-		model.numberOfSummoners = mongo.live.ranked_summoners.count()
-		model.numberOfGames = mongo.live.ranked_games.count()
+		model.numberOfSummoners = mongo.season_3.ranked_summoners.count()
+		model.numberOfGames = mongo.season_3.ranked_games.count()
 
 		def outputPath = new File(outputDirectory, "summoner/${region.value.path}")
 		outputPath.mkdirs()

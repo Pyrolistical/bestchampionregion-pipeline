@@ -11,8 +11,8 @@ def class SummonerService {
 	def summonerCollection
 
 	def SummonerService(mongo) {
-		summonerCollection = mongo.live.ranked_summoners
-		regulache = new Regulache("http://localhost:30080/", mongo.live.league_by_summoner_2p2)
+		summonerCollection = mongo.season_3.ranked_summoners
+		regulache = new Regulache("http://localhost:30080/", mongo.season_3.league_by_summoner_2p2)
 	}
 
 	def getSummonersByIds(summonerIds) {

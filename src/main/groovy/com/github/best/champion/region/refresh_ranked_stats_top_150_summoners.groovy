@@ -9,8 +9,8 @@ import java.util.concurrent.TimeUnit
 
 MongoUtils.connect {
 	mongo ->
-		def ranked_stats = mongo.live.ranked_stats_by_summoner_1p2
-		def summoner_ratings = mongo.live.summoner_ratings
+		def ranked_stats = mongo.season_3.ranked_stats_by_summoner_1p2
+		def summoner_ratings = mongo.season_3.summoner_ratings
 
 		def summonerIds = [] as Set
 		Champion.each {
