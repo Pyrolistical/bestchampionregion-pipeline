@@ -7,7 +7,7 @@ import com.mongodb.BasicDBObject
 MongoUtils.connect {
 	mongo ->
 		def regulache = new Regulache("http://localhost:30080/", mongo.season_4.league_by_summoner_2p2)
-		def summonerIds = mongo.season_3.ranked_summoners.find([
+		def summonerIds = mongo.season_4.ranked_summoners.find([
 				active: ['$exists': false],
 		] as BasicDBObject, [
 				_id: 1
