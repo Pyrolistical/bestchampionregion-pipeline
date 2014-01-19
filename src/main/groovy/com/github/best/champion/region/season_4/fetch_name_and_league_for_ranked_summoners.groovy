@@ -74,8 +74,10 @@ MongoUtils.connect {
 					}
 				}
 		}
-		def bonusPercentage = 100 * bonus.size()/done.size() as int
-		println("bonus of $bonusPercentage% ${bonus.size()}/${done.size()}")
+		if (done.size() > 0) {
+			def bonusPercentage = 100 * bonus.size()/done.size() as int
+			println("bonus of $bonusPercentage% ${bonus.size()}/${done.size()}")
+		}
 }
 
 def inactiveSummoner(mongo, summonerId) {
