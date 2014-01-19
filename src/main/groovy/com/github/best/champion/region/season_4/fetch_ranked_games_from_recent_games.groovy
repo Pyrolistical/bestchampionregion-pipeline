@@ -30,7 +30,7 @@ MongoUtils.connect {
 						'$in': rankedSubTypes
 				],
 				"ranked-games-extracted": [
-						"$exists": false
+						'$exists': false
 				]
 		] as BasicDBObject)
 		def start = System.currentTimeMillis()
@@ -41,7 +41,7 @@ MongoUtils.connect {
 				],
 				,
 				"ranked-games-extracted": [
-						"$exists": false
+						'$exists': false
 				]
 		] as BasicDBObject).each {
 			def previousPercentage = 100 * done / total as int
