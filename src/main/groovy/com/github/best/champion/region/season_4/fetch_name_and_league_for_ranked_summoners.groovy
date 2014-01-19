@@ -22,6 +22,7 @@ MongoUtils.connect {
 		def start = System.currentTimeMillis()
 		summonerIds.each {
 			summonerId ->
+				def previousPercentage = 100 * done.size() / total as int
 				if (done.contains(summonerId)) {
 					saved++
 					return
@@ -39,7 +40,7 @@ MongoUtils.connect {
 					done.add(summonerId)
 					return
 				}
-				def previousPercentage = 100 * done.size() / total as int
+
 				json."$summonerId".entries.each {
 					leagueEntry ->
 						def foundSummonerId = leagueEntry.playerOrTeamId as int
