@@ -72,7 +72,7 @@ def fetchRecentGames(regulache, summonerId) {
 						region: "na",
 						summonerId: summonerId as String
 				],
-				"ignore-cache-if-older-than": SIX_HOURS.ago.time
+				"ignore-cache-if-older-than": SIX_HOURS.toMilliseconds()
 		)
 		cached
 	} catch (HttpResponseException e) {

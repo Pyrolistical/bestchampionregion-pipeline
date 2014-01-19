@@ -48,6 +48,9 @@ MongoUtils.connect {
 				def summonerId = it.data.summonerId
 				it.data.games.each {
 					game ->
+						if (!rankedSubTypes.contains(game.subType)) {
+							return
+						}
 						game.summonerId = summonerId
 						mongo.season_4.ranked_games.update(
 								[
