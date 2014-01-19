@@ -23,52 +23,55 @@ MongoUtils.connect {
 		summonerIds.each {
 			summonerId ->
 				def previousPercentage = 100 * done.size() / total as int
-				if (done.contains(summonerId)) {
-					saved++
-					return
-				}
-				def (json, cached) = regulache.executeGet(
-						path: "api/lol/{region}/v2.2/league/by-summoner/{summonerId}",
-						"path-parameters": [
-								region: "na",
-								summonerId: summonerId as String
-						]
-				)
+				try {
+					if (done.contains(summonerId)) {
+						saved++
+						return
+					}
+					def (json, cached) = regulache.executeGet(
+							path: "api/lol/{region}/v2.2/league/by-summoner/{summonerId}",
+							"path-parameters": [
+									region: "na",
+									summonerId: summonerId as String
+							]
+					)
 
-				if (json == null || json."$summonerId" == null) {
-					inactiveSummoner(mongo, summonerId)
-					done.add(summonerId)
-					return
-				}
+					if (json == null || json."$summonerId" == null) {
+						inactiveSummoner(mongo, summonerId)
+						done.add(summonerId)
+						return
+					}
 
-				json."$summonerId".entries.each {
-					leagueEntry ->
-						def foundSummonerId = leagueEntry.playerOrTeamId as int
-						def summonerName = leagueEntry.playerOrTeamName
-						def tier = leagueEntry.tier
-						def rank =  leagueEntry.rank
-						def leaguePoints = leagueEntry.leaguePoints
-						updateSummoner(mongo, foundSummonerId, summonerName, League.getLeague(tier, rank), leaguePoints)
-						if (summonerIds.contains(foundSummonerId)) {
-							done.add(foundSummonerId)
-						} else {
-							bonus.add(foundSummonerId)
-						}
-				}
-				if (!done.contains(summonerId)) {
-					inactiveSummoner(mongo, summonerId)
-					done.add(summonerId)
-					return
-				}
+					json."$summonerId".entries.each {
+						leagueEntry ->
+							def foundSummonerId = leagueEntry.playerOrTeamId as int
+							def summonerName = leagueEntry.playerOrTeamName
+							def tier = leagueEntry.tier
+							def rank =  leagueEntry.rank
+							def leaguePoints = leagueEntry.leaguePoints
+							updateSummoner(mongo, foundSummonerId, summonerName, League.getLeague(tier, rank), leaguePoints)
+							if (summonerIds.contains(foundSummonerId)) {
+								done.add(foundSummonerId)
+							} else {
+								bonus.add(foundSummonerId)
+							}
+					}
+					if (!done.contains(summonerId)) {
+						inactiveSummoner(mongo, summonerId)
+						done.add(summonerId)
+						return
+					}
 
-				def currentPercentage = 100 * done.size() / total as int
-				if (previousPercentage != currentPercentage && currentPercentage % 1 == 0) {
-					def timeRemaining = (System.currentTimeMillis() - start) * (total - done.size()) / done.size() as int
-					def hours = timeRemaining / (1000 * 60 * 60) as int
-					def minutes = (timeRemaining / (1000 * 60) as int) % 60
-					def seconds = (timeRemaining / 1000 as int) % 60
-					def duration = String.format("%02d:%02d:%02d", hours, minutes, seconds)
-					println("done $currentPercentage% ${done.size()}/$total - remaining $duration saved thus far $saved")
+				} finally {
+					def currentPercentage = 100 * done.size() / total as int
+					if (previousPercentage != currentPercentage && currentPercentage % 1 == 0) {
+						def timeRemaining = (System.currentTimeMillis() - start) * (total - done.size()) / done.size() as int
+						def hours = timeRemaining / (1000 * 60 * 60) as int
+						def minutes = (timeRemaining / (1000 * 60) as int) % 60
+						def seconds = (timeRemaining / 1000 as int) % 60
+						def duration = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+						println("done $currentPercentage% ${done.size()}/$total - remaining $duration saved thus far $saved")
+					}
 				}
 		}
 		def bonusPercentage = 100 * bonus.size()/done.size() as int
