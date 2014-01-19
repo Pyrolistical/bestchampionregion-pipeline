@@ -12,30 +12,24 @@ MongoUtils.connect {
 	mongo ->
 		def regulache = new Regulache("http://localhost:30080/", mongo.season_4.league_by_summoner_2p2)
 		def summonerIds = mongo.season_4.ranked_summoners.find([
-				'$or': [[
-						'$and': [[
-								'$or': [[
-										league: "challenger"
-								], [
-										league: [
-												'$regex': ~/^diamond-\d$/
-										]
-								]]
+				'$and': [[
+						'$or': [[
+								league: "challenger"
 						], [
-								'$or': [[
-										"league-last-retrieved": [
-												'$lt': SIX_HOURS.ago.time
-										]
-								], [
-										"league-last-retrieved": [
-												'$exists': false
-										]
-								]]
+								league: [
+										'$regex': ~/^diamond-\d$/
+								]
 						]]
 				], [
-						league: [
-								'$exists': false
-						]
+						'$or': [[
+								"league-last-retrieved": [
+										'$lt': SIX_HOURS.ago.time
+								]
+						], [
+								"league-last-retrieved": [
+										'$exists': false
+								]
+						]]
 				]]
 		] as BasicDBObject, [
 				_id: 1
