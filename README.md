@@ -41,16 +41,29 @@ The following folder structure will work:
       ↳ pyrolistical
           ↳ bestchampionregion
 
+Season 4
+========
+
+There is no website for S4 yet.  Just collectining diamond 5 and better data.
+
+Download [season 4 development dump](https://www.dropbox.com/s/rxmdvf31p6j6gfp/dump-1390118531607.7z)
+
+Load data with the command `mvn exec:java -Dexec.mainClass=com.github.best.champion.region.season_4.import_development_dump -Dexec.arguments=dump-1390118531607.7z`
+
+
+Season 3
+========
+
 Generating the Site
 -------------------
 
 All projects are Maven.  Run `mvn clean install` on each one.  Each Maven project can be import a modules in the same IntelliJ project.
 
-Download [development dump](https://www.dropbox.com/sh/vfin51td8flytg9/RMVDIynDdP)
+Download [season 3 development dump](https://www.dropbox.com/sh/vfin51td8flytg9/RMVDIynDdP)
 
-Load data with the command `mvn exec:java -Dexec.mainClass=com.github.best.champion.region.import_development_dump -Dexec.arguments=dump-1388892960491.7z`
+Load data with the command `mvn exec:java -Dexec.mainClass=com.github.best.champion.region.season_3.import_development_dump -Dexec.arguments=dump-1388892960491.7z`
 
-Regenerate site from `~/projects/github.com/pyrolistical/bestchampionregion` with command `mvn exec:java -Dexec.mainClass=com.github.best.champion.region.generate_site`
+Regenerate site from `~/projects/github.com/pyrolistical/bestchampionregion` with command `mvn exec:java -Dexec.mainClass=com.github.best.champion.region.season_3.generate_site`
 
 This will output to `~/projects/github.com/concept-not-found/bestchampionregion-pages`
 
@@ -63,8 +76,6 @@ Workflow for Developing New Pages
     * see other *.html pages for examples
 2. create Groovy script that fetches the data from Mongo and fills in the template under `~/projects/github.com/pyrolistical/bestchampionregion/src/main/groovy/com/github/best/champion/region`
     * see other generate_*.groovy files for examples
-3. run Groovy script with `mvn exec:java -Dexec.mainClass=com.github.best.champion.region.<SCRIPT NAME> -Dexec.arguments=<TEMPLATE DIRECTORY>,<OUTPUT DIRECTORY>`
-
-
+3. run Groovy script with `mvn exec:java -Dexec.mainClass=com.github.best.champion.region.season_3.<SCRIPT NAME> -Dexec.arguments=<TEMPLATE DIRECTORY>,<OUTPUT DIRECTORY>`
 
 Tried and tested on Mac OS X, anything else at your peril
