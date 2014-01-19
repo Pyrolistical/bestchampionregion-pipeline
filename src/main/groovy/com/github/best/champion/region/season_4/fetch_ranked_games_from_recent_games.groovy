@@ -39,7 +39,6 @@ MongoUtils.connect {
 				"data.games.subType": [
 						'$in': rankedSubTypes
 				],
-				,
 				"ranked-games-extracted": [
 						'$exists': false
 				]
