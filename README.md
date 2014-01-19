@@ -44,7 +44,7 @@ The following folder structure will work:
 Season 4
 ========
 
-There is no website for S4 yet.  Just collectining diamond 5 and better data.
+There is no website for Season 4 yet.  Just collecting diamond 5 and better data.
 
 Download [season 4 development dump](https://www.dropbox.com/s/rxmdvf31p6j6gfp/dump-1390118531607.7z)
 
