@@ -13,11 +13,27 @@ MongoUtils.connect {
 		def regulache = new Regulache("http://localhost:30080/", mongo.season_4.league_by_summoner_2p2)
 		def summonerIds = mongo.season_4.ranked_summoners.find([
 				'$or': [[
-						"league-last-retrieved": [
-								'$lt': SIX_HOURS.ago.time
-						]
+						'$and': [[
+								'$or': [[
+										league: "challenger"
+								], [
+										league: [
+												'$regex': ~/^diamond-\d$/
+										]
+								]]
+						], [
+								'$or': [[
+										"league-last-retrieved": [
+												'$lt': SIX_HOURS.ago.time
+										]
+								], [
+										"league-last-retrieved": [
+												'$exists': false
+										]
+								]]
+						]]
 				], [
-						"league-last-retrieved": [
+						league: [
 								'$exists': false
 						]
 				]]
@@ -45,7 +61,8 @@ MongoUtils.connect {
 							"path-parameters": [
 									region: "na",
 									summonerId: summonerId as String
-							]
+							],
+							"ignore-cache-if-older-than": SIX_HOURS.ago.time
 					)
 
 					if (json == null || json."$summonerId" == null) {
@@ -95,10 +112,8 @@ MongoUtils.connect {
 def inactiveSummoner(mongo, summonerId) {
 	def entry = [
 			[
-					'$unset': [
-							league: ""
-					],
 					'$set': [
+							league: null,
 							"league-last-retrieved": System.currentTimeMillis()
 					]
 			]
