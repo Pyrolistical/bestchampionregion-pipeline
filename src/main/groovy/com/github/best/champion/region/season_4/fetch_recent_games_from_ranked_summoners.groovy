@@ -70,7 +70,7 @@ MongoUtils.connect {
 def fetchRecentGames(regulache, summonerId) {
 	try {
 		def (json, cached) = regulache.executeGet(
-				path: "api/lol/{region}/v1.2/game/by-summoner/{summonerId}/recent",
+				path: "api/lol/{region}/v1.3/game/by-summoner/{summonerId}/recent",
 				"path-parameters": [
 						region: "na",
 						summonerId: summonerId as String
