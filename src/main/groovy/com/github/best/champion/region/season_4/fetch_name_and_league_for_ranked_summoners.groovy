@@ -1,14 +1,26 @@
 package com.github.best.champion.region.season_4
+
 import com.github.best.champion.region.League
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 import com.github.concept.not.found.regulache.Regulache
 import com.mongodb.BasicDBObject
+import groovy.time.TimeDuration
+
+SIX_HOURS = new TimeDuration(6, 0, 0, 0)
 
 MongoUtils.connect {
 	mongo ->
 		def regulache = new Regulache("http://localhost:30080/", mongo.season_4.league_by_summoner_2p2)
 		def summonerIds = mongo.season_4.ranked_summoners.find([
-				active: ['$exists': false],
+				'$or': [[
+						"league-last-retrieved": [
+								'$lt': SIX_HOURS.ago.time
+						]
+				], [
+						"league-last-retrieved": [
+								'$exists': false
+						]
+				]]
 		] as BasicDBObject, [
 				_id: 1
 		] as BasicDBObject).limit(100_000).collect {
@@ -47,7 +59,7 @@ MongoUtils.connect {
 							def foundSummonerId = leagueEntry.playerOrTeamId as int
 							def summonerName = leagueEntry.playerOrTeamName
 							def tier = leagueEntry.tier
-							def rank =  leagueEntry.rank
+							def rank = leagueEntry.rank
 							def leaguePoints = leagueEntry.leaguePoints
 							updateSummoner(mongo, foundSummonerId, summonerName, League.getLeague(tier, rank), leaguePoints)
 							if (summonerIds.contains(foundSummonerId)) {
@@ -75,7 +87,7 @@ MongoUtils.connect {
 				}
 		}
 		if (done.size() > 0) {
-			def bonusPercentage = 100 * bonus.size()/done.size() as int
+			def bonusPercentage = 100 * bonus.size() / done.size() as int
 			println("bonus of $bonusPercentage% ${bonus.size()}/${done.size()}")
 		}
 }
@@ -83,8 +95,10 @@ MongoUtils.connect {
 def inactiveSummoner(mongo, summonerId) {
 	def entry = [
 			[
+					'$unset': [
+							league: ""
+					],
 					'$set': [
-							active: false,
 							"league-last-retrieved": System.currentTimeMillis()
 					]
 			]
@@ -101,7 +115,6 @@ def updateSummoner(mongo, summonerId, name, league, leaguePoints) {
 	def entry = [
 			[
 					'$set': [
-							active: true,
 							name: name,
 							"name-last-retrieved": System.currentTimeMillis(),
 							league: league.path,

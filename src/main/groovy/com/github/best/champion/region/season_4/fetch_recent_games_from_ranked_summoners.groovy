@@ -11,15 +11,12 @@ SIX_HOURS = new TimeDuration(6, 0, 0, 0)
 MongoUtils.connect {
 	mongo ->
 		mongo.season_4.ranked_summoners.ensureIndex([
-				active: 1,
 				league: 1,
 				"recent-games-last-retrieved": 1
 		] as BasicDBObject)
 
 		def summonerIds = mongo.season_4.ranked_summoners.find([
 				'$and': [[
-				        active: true
-				],[
 						'$or': [[
 								league: "challenger"
 						], [
