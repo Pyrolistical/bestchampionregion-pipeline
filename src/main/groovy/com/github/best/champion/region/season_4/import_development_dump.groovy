@@ -23,7 +23,3 @@ MongoUtils.connect {
 				.start()
 				.waitFor()
 }
-
-["update_summoner_ratings", "fetch_ranked_games_from_recent_games"].each {
-	Class.forName("com.github.best.champion.region.season_4.$it").newInstance().run()
-}

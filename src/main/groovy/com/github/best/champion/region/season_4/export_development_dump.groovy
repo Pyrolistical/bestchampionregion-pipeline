@@ -39,6 +39,19 @@ MongoUtils.connect {
 				.start()
 				.waitFor()
 
+		new ProcessBuilder(
+				"mongodump",
+				"-v",
+				"--db",
+				database,
+				"--collection",
+				"ranked_games"
+		)
+				.directory(new File(outputDirectory))
+				.inheritIO()
+				.start()
+				.waitFor()
+
 		[
 				"league_by_summoner_2p2": "api/lol/{region}/v2.2/league/by-summoner/{summonerId}",
 				"recent_games_by_summoner_1p3": "api/lol/{region}/v1.3/game/by-summoner/{summonerId}/recent"
