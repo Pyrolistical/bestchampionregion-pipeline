@@ -1,4 +1,4 @@
-package com.github.best.champion.region.season_3
+package com.github.best.champion.region.season_4
 
 import com.github.concept.not.found.mongo.groovy.util.MongoUtils
 
@@ -25,5 +25,5 @@ MongoUtils.connect {
 }
 
 ["update_summoner_ratings", "fetch_ranked_games_from_recent_games"].each {
-	Class.forName("com.github.best.champion.region.season_3.$it").newInstance().run()
+	Class.forName("com.github.best.champion.region.season_4.$it").newInstance().run()
 }
