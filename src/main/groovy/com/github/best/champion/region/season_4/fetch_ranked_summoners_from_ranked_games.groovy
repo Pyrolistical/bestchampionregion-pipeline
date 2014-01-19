@@ -35,7 +35,7 @@ MongoUtils.connect {
 
 				mongo.season_4.ranked_games.update(
 						[
-								_id: it._id
+								_id: game._id
 						] as BasicDBObject,
 						[
 								'$set': [
