@@ -18,62 +18,54 @@ MongoUtils.connect {
 		] as BasicDBObject)
 		println("Number of Summoners (D5 up): $numberOfSummoners")
 		println("\tPending Update")
-		(1..6).each {
+		def pending = (6..1).collect {
 			hour ->
 				def duration = new TimeDuration(hour, 0, 0, 0)
-				def numberOfSummonersToUpdate = mongo.season_4.ranked_summoners.count([
-						'$and': [[
-								'$or': [[
-										league: "challenger"
-								], [
-										league: [
-												'$regex': ~/^diamond-\d$/
-										]
-								]]
+				mongo.season_4.ranked_summoners.count([
+						'$or': [[
+								league: "challenger"
 						], [
-								'$or': [[
-										"league-last-retrieved": [
-												'$lt': duration.ago.time
-										]
-								], [
-										"league-last-retrieved": [
-												'$exists': false
-										]
-								]]
-						]]
+								league: [
+										'$regex': ~/^diamond-\d$/
+								]
+						]],
+						"league-last-retrieved": [
+								'$lt': duration.ago.time
+						]
 				] as BasicDBObject)
-				println("\t\t$hour hour: $numberOfSummonersToUpdate")
 		}
+		(6..1).each {
+			hour ->
+				def next = hour > 1 ? pending[6 - hour + 1] : 0
+				println("\t\t$hour-${hour - 1} hour: ${pending[6 - hour] - next}")
+		}
+
 
 		def numberOfRankedGames = mongo.season_4.ranked_games.count()
 		println("Number of Ranked Games (D5 up): $numberOfRankedGames")
 		println("\tPending Update")
-		(1..6).each {
+		pending = (6..1).collect {
 			hour ->
-				def duration = new TimeDuration(hour, 0, 0, 0)
-				def numberOfSummonersToUpdate = mongo.season_4.ranked_summoners.count([
-						'$and': [[
-								'$or': [[
-										league: "challenger"
-								], [
-										league: [
-												'$regex': ~/^diamond-\d$/
-										]
-								]]
+				def duration = new TimeDuration(hour - 6, 0, 0, 0)
+				mongo.season_4.ranked_summoners.count([
+						'$or': [[
+								league: "challenger"
 						], [
-								'$or': [[
-										"recent-games-last-retrieved": [
-												'$lt': duration.ago.time
-										]
-								], [
-										"recent-games-last-retrieved": [
-												'$exists': false
-										]
-								]]
-						]]
+								league: [
+										'$regex': ~/^diamond-\d$/
+								]
+						]],
+						"recent-games-last-retrieved": [
+								'$lt': duration.ago.time,
+						]
 				] as BasicDBObject)
-				println("\t\t$hour hour: $numberOfSummonersToUpdate")
 		}
+		(6..1).each {
+			hour ->
+				def next = hour > 1 ? pending[6 - hour + 1] : 0
+				println("\t\t$hour-${hour - 1} hour: ${pending[6 - hour] - next}")
+		}
+
 
 		def dataSize = mongo.season_4.stats.dataSize / 1024 / 1024 as int
 		println("season_4 dataSize: $dataSize MB")
