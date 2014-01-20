@@ -46,9 +46,9 @@ Season 4
 
 There is no website for Season 4 yet.  Just collecting diamond 5 and better data.
 
-Download [season 4 development dump](https://www.dropbox.com/s/rxmdvf31p6j6gfp/dump-1390118531607.7z)
+Download [season 4 development dump](https://www.dropbox.com/sh/vfin51td8flytg9/RMVDIynDdP)
 
-Load data with the command `mvn exec:java -Dexec.mainClass=com.github.best.champion.region.season_4.import_development_dump -Dexec.arguments=dump-1390118531607.7z`
+Load data with the command `mvn exec:java -Dexec.mainClass=com.github.best.champion.region.season_4.import_development_dump -Dexec.arguments=dump-TIMESTAMP.7z`
 
 
 Season 3
