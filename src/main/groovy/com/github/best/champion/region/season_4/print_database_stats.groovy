@@ -46,7 +46,7 @@ MongoUtils.connect {
 		println("\tPending Update")
 		pending = (1..6).collect {
 			hour ->
-				def duration = new TimeDuration(hour - 6, 0, 0, 0)
+				def duration = new TimeDuration(hour, 0, 0, 0)
 				mongo.season_4.ranked_summoners.count([
 						'$or': [[
 								league: "challenger"
