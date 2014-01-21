@@ -6,7 +6,8 @@ import com.github.concept.not.found.regulache.Regulache
 import com.mongodb.BasicDBObject
 import groovy.time.TimeDuration
 
-SIX_HOURS = new TimeDuration(6, 0, 0, 0)
+def sinceHours = args.length > 1 ? args[0] : 6
+timeDuration = new TimeDuration(sinceHours, 0, 0, 0)
 
 MongoUtils.connect {
 	mongo ->
@@ -23,7 +24,7 @@ MongoUtils.connect {
 				], [
 						'$or': [[
 								"league-last-retrieved": [
-										'$lt': SIX_HOURS.ago.time
+										'$lt': timeDuration.ago.time
 								]
 						], [
 								"league-last-retrieved": [
@@ -56,7 +57,7 @@ MongoUtils.connect {
 									region: "na",
 									summonerId: summonerId as String
 							],
-							"ignore-cache-if-older-than": SIX_HOURS.toMilliseconds()
+							"ignore-cache-if-older-than": timeDuration.toMilliseconds()
 					)
 
 					if (json == null || json."$summonerId" == null) {

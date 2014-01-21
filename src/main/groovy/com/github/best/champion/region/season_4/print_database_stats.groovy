@@ -18,7 +18,7 @@ MongoUtils.connect {
 		] as BasicDBObject)
 		println("Number of Summoners (D5 up): $numberOfSummoners")
 		println("\tPending Update")
-		def pending = (1..6).collect {
+		def pending = (0..5).collect {
 			hour ->
 				def duration = new TimeDuration(hour, 0, 0, 0)
 				mongo.season_4.ranked_summoners.count([
@@ -44,7 +44,7 @@ MongoUtils.connect {
 		def numberOfRankedGames = mongo.season_4.ranked_games.count()
 		println("Number of Ranked Games (D5 up): $numberOfRankedGames")
 		println("\tPending Update")
-		pending = (1..6).collect {
+		pending = (0..5).collect {
 			hour ->
 				def duration = new TimeDuration(hour, 0, 0, 0)
 				mongo.season_4.ranked_summoners.count([

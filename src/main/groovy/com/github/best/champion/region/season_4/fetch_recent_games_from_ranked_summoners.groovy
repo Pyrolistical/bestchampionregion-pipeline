@@ -6,7 +6,8 @@ import com.mongodb.BasicDBObject
 import groovy.time.TimeDuration
 import groovyx.net.http.HttpResponseException
 
-SIX_HOURS = new TimeDuration(6, 0, 0, 0)
+def sinceHours = args.length > 1 ? args[0] : 6
+timeDuration = new TimeDuration(sinceHours, 0, 0, 0)
 
 MongoUtils.connect {
 	mongo ->
@@ -27,7 +28,7 @@ MongoUtils.connect {
 				], [
 						'$or': [[
 								"recent-games-last-retrieved": [
-										'$lt': SIX_HOURS.ago.time
+										'$lt': timeDuration.ago.time
 								]
 						], [
 								"recent-games-last-retrieved": [
@@ -72,7 +73,7 @@ def fetchRecentGames(regulache, summonerId) {
 						region: "na",
 						summonerId: summonerId as String
 				],
-				"ignore-cache-if-older-than": SIX_HOURS.toMilliseconds()
+				"ignore-cache-if-older-than": timeDuration.toMilliseconds()
 		)
 		cached
 	} catch (HttpResponseException e) {
