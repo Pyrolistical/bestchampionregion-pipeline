@@ -6,7 +6,7 @@ import com.github.concept.not.found.regulache.Regulache
 import com.mongodb.BasicDBObject
 import groovy.time.TimeDuration
 
-def sinceHours = args.length > 1 ? args[0] : 6
+def sinceHours = args.length > 1 ? args[0] as int: 6
 timeDuration = new TimeDuration(sinceHours, 0, 0, 0)
 
 MongoUtils.connect {
