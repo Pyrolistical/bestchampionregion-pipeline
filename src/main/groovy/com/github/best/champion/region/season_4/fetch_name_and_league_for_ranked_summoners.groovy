@@ -34,15 +34,13 @@ MongoUtils.connect {
 								]]
 						]]
 				], [
-						'$not': [
-								'$or': [[
-										league: "challenger"
-								], [
-										league: [
-												'$regex': ~/^diamond-\d$/
-										]
-								]]
-						],
+						'$nor': [[
+								league: "challenger"
+						], [
+								league: [
+										'$regex': ~/^diamond-\d$/
+								]
+						]],
 						"played-in-high-elo": true
 				]]
 		] as BasicDBObject, [
