@@ -6,7 +6,7 @@ import com.mongodb.BasicDBObject
 import groovy.time.TimeDuration
 import groovyx.net.http.HttpResponseException
 
-def sinceHours = args.length > 1 ? args[0] as int : 6
+def sinceHours = args.length >= 1 ? args[0] as int : 6
 timeDuration = new TimeDuration(sinceHours, 0, 0, 0)
 
 MongoUtils.connect {
@@ -85,7 +85,8 @@ def updateTimestamp(mongo, summonerId) {
 	def entry = [
 			[
 					'$set': [
-							"recent-games-last-retrieved": System.currentTimeMillis()
+							"recent-games-last-retrieved": System.currentTimeMillis(),
+							"played-in-high-elo": true
 					]
 			]
 	]

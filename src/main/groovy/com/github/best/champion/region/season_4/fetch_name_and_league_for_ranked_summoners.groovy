@@ -6,31 +6,44 @@ import com.github.concept.not.found.regulache.Regulache
 import com.mongodb.BasicDBObject
 import groovy.time.TimeDuration
 
-def sinceHours = args.length > 1 ? args[0] as int: 6
+def sinceHours = args.length >= 1 ? args[0] as int : 6
 timeDuration = new TimeDuration(sinceHours, 0, 0, 0)
 
 MongoUtils.connect {
 	mongo ->
 		def regulache = new Regulache("http://localhost:30080/", mongo.season_4.league_by_summoner_2p2)
 		def summonerIds = mongo.season_4.ranked_summoners.find([
-				'$and': [[
-						'$or': [[
-								league: "challenger"
+				'$or': [[
+						'$and': [[
+								'$or': [[
+										league: "challenger"
+								], [
+										league: [
+												'$regex': ~/^diamond-\d$/
+										]
+								]]
 						], [
-								league: [
-										'$regex': ~/^diamond-\d$/
-								]
+								'$or': [[
+										"league-last-retrieved": [
+												'$lt': timeDuration.ago.time
+										]
+								], [
+										"league-last-retrieved": [
+												'$exists': false
+										]
+								]]
 						]]
 				], [
-						'$or': [[
-								"league-last-retrieved": [
-										'$lt': timeDuration.ago.time
-								]
-						], [
-								"league-last-retrieved": [
-										'$exists': false
-								]
-						]]
+						'$not': [
+								'$or': [[
+										league: "challenger"
+								], [
+										league: [
+												'$regex': ~/^diamond-\d$/
+										]
+								]]
+						],
+						"played-in-high-elo": true
 				]]
 		] as BasicDBObject, [
 				_id: 1
@@ -130,6 +143,9 @@ def updateSummoner(mongo, summonerId, name, league, leaguePoints) {
 							league: league.path,
 							leaguePoints: leaguePoints,
 							"league-last-retrieved": System.currentTimeMillis()
+					],
+					'$unset': [
+							"played-in-high-elo": ""
 					]
 			]
 	]
