@@ -65,7 +65,9 @@ def upsertSummoner(summonerId, ranked_summoners) {
 					_id: summonerId
 			] as BasicDBObject,
 			[
-					'$set': [:]
+					'$set': [
+							"played-in-high-elo": true
+					]
 			] as BasicDBObject,
 			true,
 			false

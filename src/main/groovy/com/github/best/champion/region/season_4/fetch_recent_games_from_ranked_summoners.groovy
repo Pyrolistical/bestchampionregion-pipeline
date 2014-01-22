@@ -85,8 +85,7 @@ def updateTimestamp(mongo, summonerId) {
 	def entry = [
 			[
 					'$set': [
-							"recent-games-last-retrieved": System.currentTimeMillis(),
-							"played-in-high-elo": true
+							"recent-games-last-retrieved": System.currentTimeMillis()
 					]
 			]
 	]
