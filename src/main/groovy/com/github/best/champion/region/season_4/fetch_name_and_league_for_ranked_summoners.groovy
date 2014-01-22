@@ -59,7 +59,6 @@ MongoUtils.connect {
 				def previousPercentage = 100 * done.size() / total as int
 				try {
 					if (done.contains(summonerId)) {
-						saved++
 						return
 					}
 					def (json, cached) = regulache.executeGet(
@@ -87,6 +86,9 @@ MongoUtils.connect {
 							updateSummoner(mongo, foundSummonerId, summonerName, League.getLeague(tier, rank), leaguePoints)
 							if (summonerIds.contains(foundSummonerId)) {
 								done.add(foundSummonerId)
+								if (summonerId != foundSummonerId) {
+									saved++
+								}
 							} else {
 								bonus.add(foundSummonerId)
 							}
