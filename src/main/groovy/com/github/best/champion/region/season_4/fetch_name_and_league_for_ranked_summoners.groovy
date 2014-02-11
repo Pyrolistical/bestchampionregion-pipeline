@@ -11,7 +11,7 @@ timeDuration = new TimeDuration(sinceHours, 0, 0, 0)
 
 MongoUtils.connect {
 	mongo ->
-		def regulache = new Regulache("http://localhost:30080/", mongo.season_4.league_by_summoner_2p2)
+		def regulache = new Regulache("http://localhost:30080/", mongo.season_4.league_by_summoner_entry_2p3)
 		def summonerIds = mongo.season_4.ranked_summoners.find([
 				'$or': [[
 						'$and': [[
@@ -49,20 +49,15 @@ MongoUtils.connect {
 			it._id
 		} as Set
 
-		def done = [] as Set
-		def bonus = [] as Set
-		def saved = 0
+		def done = 0
 		def total = summonerIds.size()
 		def start = System.currentTimeMillis()
 		summonerIds.each {
 			summonerId ->
-				def previousPercentage = 100 * done.size() / total as int
+				def previousPercentage = 100 * done / total as int
 				try {
-					if (done.contains(summonerId)) {
-						return
-					}
 					def (json, cached) = regulache.executeGet(
-							path: "api/lol/{region}/v2.2/league/by-summoner/{summonerId}",
+							path: "api/lol/{region}/v2.3/league/by-summoner/{summonerId}/entry",
 							"path-parameters": [
 									region: "na",
 									summonerId: summonerId as String
@@ -70,50 +65,32 @@ MongoUtils.connect {
 							"ignore-cache-if-older-than": timeDuration.toMilliseconds()
 					)
 
-					if (json == null || json."$summonerId" == null) {
+					if (json == null) {
 						inactiveSummoner(mongo, summonerId)
-						done.add(summonerId)
-						return
+					} else {
+						json.findAll {
+							it.queueType == "RANKED_SOLO_5x5"
+						}.each {
+							leagueEntry ->
+								def summonerName = leagueEntry.playerOrTeamName
+								def tier = leagueEntry.tier
+								def rank = leagueEntry.rank
+								def leaguePoints = leagueEntry.leaguePoints
+								updateSummoner(mongo, summonerId, summonerName, League.getLeague(tier, rank), leaguePoints)
+						}
 					}
-
-					json."$summonerId".entries.each {
-						leagueEntry ->
-							def foundSummonerId = leagueEntry.playerOrTeamId as int
-							def summonerName = leagueEntry.playerOrTeamName
-							def tier = leagueEntry.tier
-							def rank = leagueEntry.rank
-							def leaguePoints = leagueEntry.leaguePoints
-							updateSummoner(mongo, foundSummonerId, summonerName, League.getLeague(tier, rank), leaguePoints)
-							if (summonerIds.contains(foundSummonerId)) {
-								done.add(foundSummonerId)
-								if (summonerId != foundSummonerId) {
-									saved++
-								}
-							} else {
-								bonus.add(foundSummonerId)
-							}
-					}
-					if (!done.contains(summonerId)) {
-						inactiveSummoner(mongo, summonerId)
-						done.add(summonerId)
-						return
-					}
-
+					done++
 				} finally {
-					def currentPercentage = 100 * done.size() / total as int
+					def currentPercentage = 100 * done / total as int
 					if (previousPercentage != currentPercentage && currentPercentage % 1 == 0) {
-						def timeRemaining = (System.currentTimeMillis() - start) * (total - done.size()) / done.size() as int
+						def timeRemaining = (System.currentTimeMillis() - start) * (total - done) / done as int
 						def hours = timeRemaining / (1000 * 60 * 60) as int
 						def minutes = (timeRemaining / (1000 * 60) as int) % 60
 						def seconds = (timeRemaining / 1000 as int) % 60
 						def duration = String.format("%02d:%02d:%02d", hours, minutes, seconds)
-						println("done $currentPercentage% ${done.size()}/$total - remaining $duration saved thus far $saved")
+						println("done $currentPercentage% $done/$total - remaining $duration")
 					}
 				}
-		}
-		if (done.size() > 0) {
-			def bonusPercentage = 100 * bonus.size() / done.size() as int
-			println("bonus of $bonusPercentage% ${bonus.size()}/${done.size()}")
 		}
 }
 
